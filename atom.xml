@@ -3,11 +3,11 @@
   <title>Blog</title>
   
   <subtitle>maoblog</subtitle>
-  <link href="https://nyanpasu.space/blog/atom.xml" rel="self"/>
+  <link href="https://nyanpasu.space/atom.xml" rel="self"/>
   
-  <link href="https://nyanpasu.space/blog/"/>
+  <link href="https://nyanpasu.space/"/>
   <updated>2024-03-08T14:14:36.000Z</updated>
-  <id>https://nyanpasu.space/blog/</id>
+  <id>https://nyanpasu.space/</id>
   
   <author>
     <name>John Doe</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>中文測試</title>
-    <link href="https://nyanpasu.space/blog/2013/12/%E4%B8%AD%E6%96%87%E6%B8%AC%E8%A9%A6/"/>
-    <id>https://nyanpasu.space/blog/2013/12/%E4%B8%AD%E6%96%87%E6%B8%AC%E8%A9%A6/</id>
+    <link href="https://nyanpasu.space/2013/12/%E4%B8%AD%E6%96%87%E6%B8%AC%E8%A9%A6/"/>
+    <id>https://nyanpasu.space/2013/12/%E4%B8%AD%E6%96%87%E6%B8%AC%E8%A9%A6/</id>
     <published>2013-12-24T15:31:30.000Z</published>
     <updated>2024-03-08T14:14:36.000Z</updated>
     

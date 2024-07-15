@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport" />
+  <link rel="alternate icon" type="image/png" href="/img/favicon.ico">
+  <title>
+    
+      Linux渗透研究--Linux特性利用和极限场景处理 |
+     
+    Blog
+  </title>
+  
+<link rel="stylesheet" href="/css/maoblog.css">
+
+  
+<link rel="stylesheet" href="/css/partials/post.css">
+
+  
+<link rel="stylesheet" href="/css/partials/comment.css">
+
+  
+<link rel="stylesheet" href="/css/partials/search.css">
+
+  
+<link rel="stylesheet" href="/css/partials/meta.css">
+
+  
+<link rel="stylesheet" href="/css/partials/about.css">
+
+  
+<link rel="stylesheet" href="/fontawesome/css/font-awesome.min.css">
+
+  
+<link rel="stylesheet" href="/css/zoom.css">
+
+  
+<link rel="stylesheet" href="/css/prism.css">
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="/css/math/katex.min.css">
+
+<link rel="stylesheet" href="/css/math/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div class="body-container">
+      <div class="body-main">
+        <div class="header-wrapper"><div class="header">
+  <a class="logo" href="/">Blog</a>
+  <ul class="nav">
+    
+      
+        <li><a href="/">Posts</a></li>
+      
+    
+      
+        <li><a href="/tags">Tags</a></li>
+      
+    
+      
+        <li><a style="cursor: pointer;" onclick="openSearchBar()">Search</a></li>
+      
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+    <!-- <li class="site-mode">light</i></li> -->
+  </ul>
+</div>
+<div class="search-bar-container">  
+    <div class="search-bar">
+        <input id="search-input" value="" class="search-input" autofocus placeholder="Search something..." type="text" onblur="hideSearchBar()" oninput="exportSearchContent()">
+    </div>
+    <div class="search-output">
+        <ul class="search-output-list">
+            <!-- 结果列表 -->
+            <!-- <span style="padding-left: 3px; margin-left: 3px;">无记录</span> -->
+            <li class="Searching">
+                <div class="content">
+                    Searching...
+                </div>
+            </li>
+        </ul>
+        <span style="padding-left: 3px; margin-left: 3px; font-size: 13px;"><em>Powered by <span  onclick="goToLink(this)"><a href="/search.xml" class="search-xml li-link">search.xml</a></span></em></span>
+    </div>
+</div></div>
+        <div class="main-wrapper"><main>
+  <div class="main-container">
+      <div class="post-details">
+          
+            <div class="post-title">
+              <h1>Linux渗透研究--Linux特性利用和极限场景处理</h1>
+            </div>
+          
+          <div class="post-content">
+            <p>Linux渗透的时候要理解和接受一个概念：Linux一切皆文件</p>
+<p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong></p>
+<p>Linux不同发行版有他们自己的特性，这些特性在渗透和后渗透中都可以用到</p>
+<h2 id="查看系统ip信息"><a class="markdownIt-Anchor" href="#查看系统ip信息"></a> 查看系统ip信息</h2>
+<ul>
+<li>阉割 ip a、ifconfig</li>
+</ul>
+<p>在<strong>非DHCP</strong>情况下，不同发行版在本地文件可以找到ip配置信息</p>
+<p>RHEL/CentOS系</p>
+<pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;sysconfig&#x2F;network-scripts&#x2F;ifcfg-&lt;interface&gt;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20240429114106822.png" alt="image-20240429114106822" /></p>
+<p>Debian系</p>
+<pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;network&#x2F;interfaces<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>其他：</p>
+<ul>
+<li>查看arp表</li>
+<li>hostname -I</li>
+<li>端口连接信息</li>
+</ul>
+<h2 id="查看端口连接信息"><a class="markdownIt-Anchor" href="#查看端口连接信息"></a> 查看端口连接信息</h2>
+<p>/proc/net 下面的tcp和udp文件会存储网络端口连接情况</p>
+<p><img src="C:%5CUsers%5C14198%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20240527102511919.png" alt="image-20240527102511919" /></p>
+
+          </div>
+          
+            <div class="dot-line"></div>
+            <div class="post-meta">
+              <div class="post-date">
+                <i class="fa fa-calendar"></i>&nbsp;&nbsp;<span class="post-date">2024/04/29</span>
+              </div>
+              <div class="post-tags">
+                 
+                  
+                    <div class="tag-item">
+                      <a href="/tags/Linux/"><i class="fa fa-tag"></i>&nbsp;&nbsp;Linux</a>
+                    </div>
+                  
+                
+              </div>
+            </div>
+          
+      </div>
+  </div>
+</main>
+
+<script src="https://giscus.app/client.js"
+        data-repo="maodaisuki/hexo-theme-maoblog"
+        data-repo-id="R_kgDOKICkkw"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOKICkk84CZEWg"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="0"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 前往 https://giscus.app 获取配置代码 -->
+
+
+  
+<script src="/js/mermaid.min.js"></script>
+
+
+
+<script src="/js/zoom/jquery.min.js"></script>
+
+
+<script src="/js/zoom/bootstrap.min.js"></script>
+
+
+<script src="/js/zoom/zoom.js"></script>
+
+
+<script src="/js/maoblog.js"></script>
+
+
+<script src="/js/prism.js"></script>
+</div>
+        <div class="footer-wrapper"><footer>
+  <div class="footer-container">
+    <div class="footer-meta">
+      
+        <div class="footer-meta-copyright">
+          &copy; 2024 CyxSec.
+        </div>
+      
+      
+        <div class="footer-meta-licenese">
+            <a href="/null"></a>
+        </div>
+      
+      
+        <div class="footer-meta-rss">
+          <a href="/atom.xml"><i class="fa fa-rss"></i></a>
+        </div>
+      
+    </div>
+  </div>
+</footer>
+</div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    var searchXMLPath = "https://cyxsec.github.io" + "/" + "search.xml"
+    console.log(searchXMLPath)
+  </script>
+  
+<script src="/js/search/search.js"></script>
+
+</html>

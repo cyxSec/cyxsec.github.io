@@ -4,17 +4,17 @@
   
     
     <entry>
-      <title>Linux渗透研究--Linux特性利用和极限场景处理</title>
-      <link href="/2024/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/"/>
-      <url>/2024/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/</url>
+      <title>Linux后渗透研究--Linux特性利用和极限场景处理</title>
+      <link href="/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/"/>
+      <url>/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/</url>
       
-        <content type="html"><![CDATA[<p>Linux渗透的时候要理解和接受一个概念：Linux一切皆文件</p><p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong></p><p>Linux不同发行版有他们自己的特性，这些特性在渗透和后渗透中都可以用到</p><h2 id="查看系统ip信息"><a class="markdownIt-Anchor" href="#查看系统ip信息"></a> 查看系统ip信息</h2><ul><li>阉割 ip a、ifconfig</li></ul><p>在<strong>非DHCP</strong>情况下，不同发行版在本地文件可以找到ip配置信息</p><p>RHEL/CentOS系</p><pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;sysconfig&#x2F;network-scripts&#x2F;ifcfg-&lt;interface&gt;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p><img src="C:%5CUsers%5C14198%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20240429114106822.png" alt="image-20240429114106822" /></p><p>Debian系</p><pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;network&#x2F;interfaces<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>其他：</p><ul><li>查看arp表</li><li>hostname -I</li><li>端口连接信息</li></ul><h2 id="查看端口连接信息"><a class="markdownIt-Anchor" href="#查看端口连接信息"></a> 查看端口连接信息</h2><p>/proc/net 下面的tcp和udp文件会存储网络端口连接情况</p><p><img src="C:%5CUsers%5C14198%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20240527102511919.png" alt="image-20240527102511919" /></p>]]></content>
+        <content type="html"><![CDATA[<p>Linux渗透的时候要理解和接受一个概念：Linux一切皆文件</p><p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong></p><p>Linux不同发行版有他们自己的特性，这些特性在渗透和后渗透中都可以用到</p><h2 id="0x01查看系统ip信息"><a class="markdownIt-Anchor" href="#0x01查看系统ip信息"></a> 0x01查看系统ip信息</h2><ul><li>阉割 ip a、ifconfig</li></ul><p>在<strong>非DHCP</strong>情况下，不同发行版在本地文件可以找到ip配置信息</p><p>RHEL/CentOS系</p><pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;sysconfig&#x2F;network-scripts&#x2F;ifcfg-&lt;interface&gt;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p><img src="..%5C..%5C..%5Ctypora-user-images%5Cimage-20240429114106822.png" alt="image-20240429114106822" /></p><p>Debian系</p><pre class="line-numbers language-none"><code class="language-none">&#x2F;etc&#x2F;network&#x2F;interfaces<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>其他：</p><ul><li>查看arp表</li><li>hostname -I</li><li>端口连接信息</li></ul><h2 id="0x02查看端口连接信息"><a class="markdownIt-Anchor" href="#0x02查看端口连接信息"></a> 0x02查看端口连接信息</h2><p>/proc/net 下面的tcp和udp文件会存储网络端口连接情况</p><p><img src="..%5C..%5C..%5Ctypora-user-images%5Cimage-20240527102511919.png" alt="image-20240527102511919" /></p>]]></content>
       
       
       
         <tags>
             
-            <tag> Linux </tag>
+            <tag> 后渗透 </tag>
             
         </tags>
       

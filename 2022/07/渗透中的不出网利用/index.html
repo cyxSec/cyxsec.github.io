@@ -15,7 +15,7 @@
   
   <title>
     
-      archive_a: 2024/7 
+      不出网C2上线 
       
       
       |
@@ -107,57 +107,214 @@
 
 
       <div class="flex-container">
-        <!-- 归档页，展示本站所有文章，按照年份降序归类，url形式：https://yoursite/archives/ -->
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
 
-<!-- last: 按年份把文章分组，当前遍历到的年份 -->
-<!-- now: 当前遍历到的文章的发布年份 -->
 
-<div class="container archives">
-  <div class="post-list">
-    
-        <!-- 后续文章的发布年份呈现 -->
-        <div class="content-title">
-          <h2>
-            <span>2024</span>
-          </h2>
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">不出网C2上线</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2024-07-15 17:52:28
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/" title="不出网利用">
+                    #不出网利用
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <p>先简单带一下常见的正向HTTP隧道</p>
+<h2 id="0x01正向http隧道"><a class="markdownIt-Anchor" href="#0x01正向http隧道"></a> 0x01正向HTTP隧道</h2>
+<p>这种方式应用范围很广，有webshell的情况下都支持此方式</p>
+<h3 id="原理"><a class="markdownIt-Anchor" href="#原理"></a> 原理</h3>
+<p>页面上存在成熟的工具Reg、NeoReg、suo5等</p>
+<p>原理大概如下图所示：（这里直接拿Viper作者的图来说了）</p>
+<p><img src="..%5C..%5C..%5Ctypora-user-images%5Cimage-20240709180051975.png" alt="image-20240709180051975" /></p>
+<ul>
+<li>
+<p>client运行在互联网的vps上，开启端口监听处理proxychains转发的tcp连接。（client对应的就是reg的本地python脚本和suo5的客户端）</p>
+</li>
+<li>
+<p>clinet从tcp连接中读取数据，将数据存储在post请求中发送到webshell。</p>
+</li>
+<li>
+<p>webshell将http请求解析并进行转发。（webshell集成了上图中的server)</p>
+</li>
+</ul>
+<p>suo5其实实现了基本全双工的模式，这个问题后面有空再研究。</p>
+<h2 id="0x02不出网上线cs场景"><a class="markdownIt-Anchor" href="#0x02不出网上线cs场景"></a> 0x02不出网上线CS场景</h2>
+<p>CS的beacon只能反向连接，不出网的情况下无法直接反向连接外网vps</p>
+<p>其实也可以利用中转的方式进行上线</p>
+<h3 id="原理-2"><a class="markdownIt-Anchor" href="#原理-2"></a> 原理</h3>
+<p>成熟的工具：pystinger（毒刺）</p>
+<p>原理大概如下图所示：（这里直接拿Viper作者的图来说了）</p>
+<p><img src="..%5C..%5C..%5Ctypora-user-images%5Cimage-20240709180109508.png" alt="image-20240709180109508" /></p>
+<p>server端：</p>
+<ul>
+<li>beacon将http请求(假设数据为AAAAAA)发送到server。</li>
+<li>server将(AAAAAA)存储到缓存，并保持与beacon的http连接。</li>
+</ul>
+<p>client端：</p>
+<ul>
+<li>请求webshell。</li>
+<li>webshell转发请求到server。</li>
+<li>server将缓存的(AAAAA)填充到http应答中。</li>
+<li>webshell将server的应答转发给client。</li>
+<li>client从应答中获取数据(AAAAA)。</li>
+<li>client与cobaltstike的listener建立tcp连接。</li>
+<li>client发送(AAAAA)到cobaltstrike的listener。</li>
+<li>conbaltstrike发送应答数据(BBBBBB)。</li>
+<li>client将数据(BBBBB)封装到http请求中,通过webshell转发到server。</li>
+<li>server通过之前保持的http连接将(BBBBBB)发送到beacon。</li>
+</ul>
+<p>实际的流程就是数据包的转换和转发，理解完上面的正向，反向的逻辑只是增加了一个监听而已。</p>
+<p>可能会有人有这样的问题：<strong>这里的webshell可以类似reg把server也整合一下吗，不落地server？</strong></p>
+<p>答案是不行的，区别于正向连接，反向连接时需要监听端口，webshell是无法做到的，所以使用毒刺的时候，不出网的机器需要落地两个文件（webshell、server）</p>
+<h2 id="0x03实战钓鱼不出网上线"><a class="markdownIt-Anchor" href="#0x03实战钓鱼不出网上线"></a> 0x03实战钓鱼不出网上线</h2>
+<p>根据上面的不出网上线cs案例解释，其实主要做的就是流量转发和格式化</p>
+<p>格式化的部分就是毒刺的client和server在做，但是这样会在webshell的机器上落地sever的二进制文件，同时需要开启监听，不够opsec。</p>
+<p>不妨把思路发散一下：有没有可能把server和c2马绑在一起呢？或者换句话说，我们可以重新写我们的c2马，直接把结果写入到webshell缓存中，c2的控制端会请求webshell获取缓存读取结果，就完成了不出网的上线流程。</p>
+<p>这个案例其实之前项目遇见过：</p>
+<p><strong>钓鱼的时候，机器不出网如何上线？？</strong></p>
+<p>找内外网可能互通的业务：邮件系统、OA系统等（可能需要账号，但是这些系统大概率内外网是互通的），或者直接摆烂，找能做数据交互的系统域名，批量都试一下。</p>
+<p>对应我们上面的思路，重新设计我们的c2马和服务端，或者没那么麻烦，自己写一个能执行命令、文件上传和读取的马就可以了。</p>
+<p>木马：</p>
+<ul>
+<li>
+<p>定时读取邮件、OA系统或者其他能存储数据的系统的数据。（如邮件内容，系统编辑内容、oa聊天记录等等），作为命令输入。</p>
+</li>
+<li>
+<p>获取命令输入后将执行结果写入对应系统。</p>
+</li>
+</ul>
+<p>因为内外网系统互通</p>
+<p>c2控制端：</p>
+<ul>
+<li>将想执行的命令写入到外网系统，供木马读取</li>
+<li>将木马执行结果读取并响应</li>
+</ul>
+<p>实战应用的话，其实还是可以用的。</p>
+<p>机器不出网的话，肯定会配内部dns，所以去外网找可以存储数据的系统域名，写木马的时候加上批量的逻辑if else尝试所有可能的域名，保证稳定获取结果就可以了。</p>
+<p>参考连接：</p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/WzXztQoiqBec-y23dRj0ww%EF%BC%88%E7%BA%A2%E9%98%9F%E6%94%BB%E9%98%B2%E5%AE%9E%E8%B7%B5%EF%BC%9A%E4%B8%8D%E5%87%BA%E7%BD%91%E4%B8%BB%E6%9C%BA%E6%90%AD%E5%BB%BA%E5%86%85%E7%BD%91%E9%9A%A7%E9%81%93%E6%96%B0%E6%80%9D%E8%B7%AF%EF%BC%89">https://mp.weixin.qq.com/s/WzXztQoiqBec-y23dRj0ww（红队攻防实践：不出网主机搭建内网隧道新思路）</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2024-07-15 17:52:28
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/" title="不出网利用">
+                        #不出网利用
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2022/08/%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E6%8A%80%E6%9C%AF/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
         </div>
       
-      <div class="post-item" title="渗透中的不出网利用">
-        <div class="time-m-d">07-03</div>
-        <div class="title">
-          <a href="/2024/07/%E6%B8%97%E9%80%8F%E4%B8%AD%E7%9A%84%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/">
-            <span>渗透中的不出网利用</span>
-          </a>
-        </div>
-      </div>
+    </div>
     
-      <div class="post-item" title="Linux渗透研究--Linux特性利用和极限场景处理">
-        <div class="time-m-d">04-29</div>
-        <div class="title">
-          <a href="/2024/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/">
-            <span>Linux渗透研究--Linux特性利用和极限场景处理</span>
-          </a>
-        </div>
-      </div>
-    
-        <!-- 后续文章的发布年份呈现 -->
-        <div class="content-title">
-          <h2>
-            <span>2013</span>
-          </h2>
-        </div>
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
       
-      <div class="post-item" title="中文測試">
-        <div class="time-m-d">12-24</div>
-        <div class="title">
-          <a href="/2013/12/%E4%B8%AD%E6%96%87%E6%B8%AC%E8%A9%A6/">
-            <span>中文測試</span>
-          </a>
-        </div>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01%E6%AD%A3%E5%90%91http%E9%9A%A7%E9%81%93"><span class="toc-text"> 0x01正向HTTP隧道</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-text"> 原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02%E4%B8%8D%E5%87%BA%E7%BD%91%E4%B8%8A%E7%BA%BFcs%E5%9C%BA%E6%99%AF"><span class="toc-text"> 0x02不出网上线CS场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86-2"><span class="toc-text"> 原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03%E5%AE%9E%E6%88%98%E9%92%93%E9%B1%BC%E4%B8%8D%E5%87%BA%E7%BD%91%E4%B8%8A%E7%BA%BF"><span class="toc-text"> 0x03实战钓鱼不出网上线</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
       </div>
     
   </div>
-</div>
+
 
         
 <div class="footer">
@@ -407,6 +564,24 @@
 
 
         
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E4%B8%8D%E5%87%BA%E7%BD%91C2%E4%B8%8A%E7%BA%BF + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2022%2F07%2F%25E6%25B8%2597%25E9%2580%258F%25E4%25B8%25AD%25E7%259A%2584%25E4%25B8%258D%25E5%2587%25BA%25E7%25BD%2591%25E5%2588%25A9%25E7%2594%25A8%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2022/07/%E6%B8%97%E9%80%8F%E4%B8%AD%E7%9A%84%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
   
   
 <script src="/js/shares.js"></script>

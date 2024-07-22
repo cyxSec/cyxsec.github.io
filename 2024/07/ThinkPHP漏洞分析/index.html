@@ -15,7 +15,7 @@
   
   <title>
     
-      archive_a: 2022/7 
+      ThinkPHP漏洞分析 
       
       
       |
@@ -107,100 +107,164 @@
 
 
       <div class="flex-container">
-        <!-- 归档页，展示本站所有文章，按照年份降序归类，url形式：https://yoursite/archives/ -->
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
 
-<!-- last: 按年份把文章分组，当前遍历到的年份 -->
-<!-- now: 当前遍历到的文章的发布年份 -->
 
-<div class="container archives">
-  <div class="post-list">
-    
-        <!-- 后续文章的发布年份呈现 -->
-        <div class="content-title">
-          <h2>
-            <span>2024</span>
-          </h2>
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">ThinkPHP漏洞分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2024-07-22 16:44:43
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                    #ThinkPHP
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h1 id="0x00-启"><a class="markdownIt-Anchor" href="#0x00-启"></a> 0x00 启</h1>
+<p>黑盒debug开启会报错出具体版本</p>
+<p>白盒看本地tp代码</p>
+<p>tp3 在目录的ThinkPHP文件中</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716150129242.png" alt="image-20240716150129242" /></p>
+<p>TP5在目录的base.php文件中</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716165942332.png" alt="image-20240716165942332" /></p>
+<h1 id="0x01-thinkphp-2x-命令执行"><a class="markdownIt-Anchor" href="#0x01-thinkphp-2x-命令执行"></a> 0x01 ThinkPHP 2.x 命令执行</h1>
+<p>PHP5的preg_replace的/e模式的命令执行</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716155011163.png" alt="image-20240716155011163" /></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token function">preg_replace</span><span class="token punctuation">(</span><span class="token string single-quoted-string">'正则规则'</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'替换字符'</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'目标字符'</span><span class="token punctuation">)</span>
+    正则规则使用e修饰时，如果从目标字符匹配到正则规则，那么替换字符的php语句就会执行<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>这个分析过程参考这篇文章即可，实战几乎没遇见过TP2，以后有空再分析吧：<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/people/223149.html">https://www.freebuf.com/articles/people/223149.html</a></p>
+<h1 id="0x02-thinkphp-5x-命令执行505-5022-510-5130"><a class="markdownIt-Anchor" href="#0x02-thinkphp-5x-命令执行505-5022-510-5130"></a> 0x02 ThinkPHP 5.x 命令执行（5.0.5-5.0.22， 5.1.0-5.1.30）</h1>
+<p>patch：</p>
+<p>添加正则判断controller名</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/top-think/framework/commit/b797d72352e6b4eb0e11b6bc2a2ef25907b7756f">https://github.com/top-think/framework/commit/b797d72352e6b4eb0e11b6bc2a2ef25907b7756f</a></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716162407625.png" alt="image-20240716162407625" /></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/top-think/framework/commit/802f284bec821a608e7543d91126abc5901b2815">https://github.com/top-think/framework/commit/802f284bec821a608e7543d91126abc5901b2815</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2023/10/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8B%E7%9A%84Webshell%E8%BF%9E%E6%8E%A5/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2024-07-22 16:44:43
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                        #ThinkPHP
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2024/07/ThinkPHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E6%8A%80%E5%B7%A7/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
         </div>
       
-      <div class="post-item" title="ThinkPHP反序列化POP链分析">
-        <div class="time-m-d">07-16</div>
-        <div class="title">
-          <a href="/2024/07/ThinkPHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96POP%E9%93%BE%E5%88%86%E6%9E%90/">
-            <span>ThinkPHP反序列化POP链分析</span>
-          </a>
-        </div>
-      </div>
+    </div>
     
-      <div class="post-item" title="ThinkPHP代码审计技巧">
-        <div class="time-m-d">07-16</div>
-        <div class="title">
-          <a href="/2024/07/ThinkPHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E6%8A%80%E5%B7%A7/">
-            <span>ThinkPHP代码审计技巧</span>
-          </a>
-        </div>
-      </div>
-    
-      <div class="post-item" title="ThinkPHP漏洞分析">
-        <div class="time-m-d">07-16</div>
-        <div class="title">
-          <a href="/2024/07/ThinkPHP%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">
-            <span>ThinkPHP漏洞分析</span>
-          </a>
-        </div>
-      </div>
-    
-        <!-- 后续文章的发布年份呈现 -->
-        <div class="content-title">
-          <h2>
-            <span>2023</span>
-          </h2>
-        </div>
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
       
-      <div class="post-item" title="负载均衡下的Webshell连接">
-        <div class="time-m-d">10-22</div>
-        <div class="title">
-          <a href="/2023/10/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8B%E7%9A%84Webshell%E8%BF%9E%E6%8E%A5/">
-            <span>负载均衡下的Webshell连接</span>
-          </a>
-        </div>
-      </div>
-    
-      <div class="post-item" title="Linux后渗透研究--Linux特性利用和极限场景处理">
-        <div class="time-m-d">04-29</div>
-        <div class="title">
-          <a href="/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/">
-            <span>Linux后渗透研究--Linux特性利用和极限场景处理</span>
-          </a>
-        </div>
-      </div>
-    
-        <!-- 后续文章的发布年份呈现 -->
-        <div class="content-title">
-          <h2>
-            <span>2022</span>
-          </h2>
-        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x00-%E5%90%AF"><span class="toc-text"> 0x00 启</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x01-thinkphp-2x-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="toc-text"> 0x01 ThinkPHP 2.x 命令执行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x02-thinkphp-5x-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C505-5022-510-5130"><span class="toc-text"> 0x02 ThinkPHP 5.x 命令执行（5.0.5-5.0.22， 5.1.0-5.1.30）</span></a></li></ol>
       
-      <div class="post-item" title="端口复用技术">
-        <div class="time-m-d">08-03</div>
-        <div class="title">
-          <a href="/2022/08/%E7%AB%AF%E5%8F%A3%E5%A4%8D%E7%94%A8%E6%8A%80%E6%9C%AF/">
-            <span>端口复用技术</span>
-          </a>
-        </div>
-      </div>
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
     
-      <div class="post-item" title="不出网C2上线">
-        <div class="time-m-d">07-05</div>
-        <div class="title">
-          <a href="/2022/07/%E4%B8%8D%E5%87%BA%E7%BD%91%E4%B8%8A%E7%BA%BFC2/">
-            <span>不出网C2上线</span>
-          </a>
-        </div>
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
       </div>
     
   </div>
-</div>
+
 
         
 <div class="footer">
@@ -450,6 +514,24 @@
 
 
         
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + ThinkPHP%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90 + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2024%2F07%2FThinkPHP%25E6%25BC%258F%25E6%25B4%259E%25E5%2588%2586%25E6%259E%2590%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2024/07/ThinkPHP%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
   
   
 <script src="/js/shares.js"></script>

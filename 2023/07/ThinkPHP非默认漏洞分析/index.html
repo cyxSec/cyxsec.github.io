@@ -156,7 +156,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-          2024-09-14 16:36:11
+          2024-09-19 10:08:30
         </span>
         
               <span class="post-tags">
@@ -185,19 +185,19 @@
 <ol>
 <li>callback调用defalt_filter</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816173930602.png" alt="image-20240816173930602" /></p>
+<p><img src="../../../typora-user-images/image-20240816173930602.png" alt="image-20240816173930602" /></p>
 <p>实体编码，防xss</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816174206494.png" alt="image-20240816174206494" /></p>
+<p><img src="../../../typora-user-images/image-20240816174206494.png" alt="image-20240816174206494" /></p>
 <ol start="2">
 <li>callback调用think_fiter</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816174457328.png" alt="image-20240816174457328" /></p>
+<p><img src="../../../typora-user-images/image-20240816174457328.png" alt="image-20240816174457328" /></p>
 <p>SQL注入过滤特殊字符</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816174544180.png" alt="image-20240816174544180" /></p>
+<p><img src="../../../typora-user-images/image-20240816174544180.png" alt="image-20240816174544180" /></p>
 <ol start="3">
 <li>SQL操作类，定义了过滤函数，特殊字符增加转义。（TP默认使用非GBK，因此也避免了字符型注入的拼接问题）</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902161421793.png" alt="image-20240902161421793" /></p>
+<p><img src="../../../typora-user-images/image-20240902161421793.png" alt="image-20240902161421793" /></p>
 <h3 id="11-find方法where注入️24"><a class="markdownIt-Anchor" href="#11-find方法where注入️24"></a> 1.1 find方法+where注入（❤️.2.4）</h3>
 <h4 id="vuldemo"><a class="markdownIt-Anchor" href="#vuldemo"></a> VulDemo</h4>
 <ul>
@@ -226,40 +226,40 @@
 <li>跟入find函数</li>
 </ol>
 <p>\Think\Model::find</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240830181613202.png" alt="image-20240830181613202" /></p>
+<p><img src="../../../typora-user-images/image-20240830181613202.png" alt="image-20240830181613202" /></p>
 <ol start="2">
 <li>找到最终执行SQL的地方</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163234596.png" alt="image-20240902163234596" /></p>
+<p><img src="../../../typora-user-images/image-20240902163234596.png" alt="image-20240902163234596" /></p>
 <ol start="3">
 <li>再往里面跟</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163408392.png" alt="image-20240902163408392" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163417366.png" alt="image-20240902163417366" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163431277.png" alt="image-20240902163431277" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163459000.png" alt="image-20240902163459000" /></p>
+<p><img src="../../../typora-user-images/image-20240902163408392.png" alt="image-20240902163408392" /></p>
+<p><img src="../../../typora-user-images/image-20240902163417366.png" alt="image-20240902163417366" /></p>
+<p><img src="../../../typora-user-images/image-20240902163431277.png" alt="image-20240902163431277" /></p>
+<p><img src="../../../typora-user-images/image-20240902163459000.png" alt="image-20240902163459000" /></p>
 <p>总结一下就是会拼接where的部分到SQL语句中。</p>
 <ol start="4">
 <li>所以重点在option数组的where键值在哪</li>
 </ol>
 <p>看一下这里的赋值部分。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163732464.png" alt="image-20240902163732464" /></p>
+<p><img src="../../../typora-user-images/image-20240902163732464.png" alt="image-20240902163732464" /></p>
 <ol start="5">
 <li>跟入图中的函数</li>
 </ol>
 <p>找到可能影响option赋值的地方（因为我们函数传入的参数是最开始的option）</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902163901971.png" alt="image-20240902163901971" /></p>
+<p><img src="../../../typora-user-images/image-20240902163901971.png" alt="image-20240902163901971" /></p>
 <p>分析一下这里的if条件，首先where肯定要赋值的，第二处where的值不是数组（是我们传入的sql注入payload），因此整个过程中options的where的值不会变。</p>
 <p>因此整个漏洞利用过程就很清晰了，我们赋值的时候选择赋值数组，然后插入SQL注入payload即可。</p>
 <p>Sno[where]=1 and 1=updatexml(1,concat(0x7e,(select user()),0x7e),1)%23</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902164834951.png" alt="image-20240902164834951" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902164651970.png" alt="image-20240902164651970" /></p>
+<p><img src="../../../typora-user-images/image-20240902164834951.png" alt="image-20240902164834951" /></p>
+<p><img src="../../../typora-user-images/image-20240902164651970.png" alt="image-20240902164651970" /></p>
 <p>整个利用完成。</p>
 <p>我们正常传参Sno=1时的opions数组：</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902164736931.png" alt="image-20240902164736931" /></p>
+<p><img src="../../../typora-user-images/image-20240902164736931.png" alt="image-20240902164736931" /></p>
 <h4 id="漏洞修复"><a class="markdownIt-Anchor" href="#漏洞修复"></a> 漏洞修复</h4>
 <p><a target="_blank" rel="noopener" href="https://github.com/top-think/thinkphp/commit/9e1db19c1e455450cfebb8b573bb51ab7a1cef04">https://github.com/top-think/thinkphp/commit/9e1db19c1e455450cfebb8b573bb51ab7a1cef04</a></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902165021921.png" alt="image-20240902165021921" /></p>
+<p><img src="../../../typora-user-images/image-20240902165021921.png" alt="image-20240902165021921" /></p>
 <p>重点在圈出来的部分，之前获取options的时候是操作原始函数参数的，更新后不操作原始参数了，漏洞也就不存在了。</p>
 <h3 id="12-where方法exp注入全版本"><a class="markdownIt-Anchor" href="#12-where方法exp注入全版本"></a> 1.2 where方法+exp注入（全版本）</h3>
 <h4 id="vuldemo-2"><a class="markdownIt-Anchor" href="#vuldemo-2"></a> VulDemo</h4>
@@ -281,16 +281,16 @@
 <ol>
 <li>where来获取参数</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902180246363.png" alt="image-20240902180246363" /></p>
+<p><img src="../../../typora-user-images/image-20240902180246363.png" alt="image-20240902180246363" /></p>
 <ol start="2">
 <li>漏洞触发点还是在find函数，解析where的部分。</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902180718410.png" alt="image-20240902180718410" /></p>
+<p><img src="../../../typora-user-images/image-20240902180718410.png" alt="image-20240902180718410" /></p>
 <ol start="3">
 <li>重点在这里，当数据第一个值为exp时，where会直接拼接第数组第二个值</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902180958738.png" alt="image-20240902180958738" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240902181103234.png" alt="image-20240902181103234" /></p>
+<p><img src="../../../typora-user-images/image-20240902180958738.png" alt="image-20240902180958738" /></p>
+<p><img src="../../../typora-user-images/image-20240902181103234.png" alt="image-20240902181103234" /></p>
 <h4 id="漏洞修复-2"><a class="markdownIt-Anchor" href="#漏洞修复-2"></a> 漏洞修复</h4>
 <p>使用TP自带的I函数获取参数即可（I函数会callback过滤一些关键字）</p>
 <h3 id="13-where方法bind注入️25"><a class="markdownIt-Anchor" href="#13-where方法bind注入️25"></a> 1.3 where方法+bind注入（❤️.2.5）</h3>
@@ -315,49 +315,49 @@
 <li>先看一下save方法都做了什么</li>
 </ol>
 <p>其实就是update更新了数据库</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905175748013.png" alt="image-20240905175748013" /></p>
+<p><img src="../../../typora-user-images/image-20240905175748013.png" alt="image-20240905175748013" /></p>
 <ol start="2">
 <li>跟入update方法</li>
 </ol>
 <p>这里的options与上面分析的相同，是我们传入的参数</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905175854513.png" alt="image-20240905175854513" /></p>
+<p><img src="../../../typora-user-images/image-20240905175854513.png" alt="image-20240905175854513" /></p>
 <ol start="3">
 <li>跟入这里的parseBind方法</li>
 </ol>
 <p>会取值赋值到bind</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905175953825.png" alt="image-20240905175953825" /></p>
+<p><img src="../../../typora-user-images/image-20240905175953825.png" alt="image-20240905175953825" /></p>
 <ol start="4">
 <li>看会update方法，跟入下发的parseSet方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905180155824.png" alt="image-20240905180155824" /></p>
+<p><img src="../../../typora-user-images/image-20240905180155824.png" alt="image-20240905180155824" /></p>
 <ol start="5">
 <li>跟入这里的bindParam方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905180242499.png" alt="image-20240905180242499" /></p>
+<p><img src="../../../typora-user-images/image-20240905180242499.png" alt="image-20240905180242499" /></p>
 <ol start="6">
 <li>重新处理了bind的值，增加了：</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905180305467.png" alt="image-20240905180305467" /></p>
+<p><img src="../../../typora-user-images/image-20240905180305467.png" alt="image-20240905180305467" /></p>
 <ol start="7">
 <li>继续往下看，看到parseWhere方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905181047505.png" alt="image-20240905181047505" /></p>
+<p><img src="../../../typora-user-images/image-20240905181047505.png" alt="image-20240905181047505" /></p>
 <ol start="8">
 <li>跟入里面的parseWhereItem方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905181152601.png" alt="image-20240905181152601" /></p>
+<p><img src="../../../typora-user-images/image-20240905181152601.png" alt="image-20240905181152601" /></p>
 <ol start="9">
 <li>当表达式bind时，会拼接key:=value</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905181250449.png" alt="image-20240905181250449" /></p>
+<p><img src="../../../typora-user-images/image-20240905181250449.png" alt="image-20240905181250449" /></p>
 <ol start="10">
 <li>看会update执行的execute方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905181339548.png" alt="image-20240905181339548" /></p>
+<p><img src="../../../typora-user-images/image-20240905181339548.png" alt="image-20240905181339548" /></p>
 <ol start="11">
 <li>很明显会走入图中的逻辑</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905181429181.png" alt="image-20240905181429181" /></p>
+<p><img src="../../../typora-user-images/image-20240905181429181.png" alt="image-20240905181429181" /></p>
 <p>这里面有个字符串替换方法</p>
 <p>就是把this—&gt;bind里面的key value对应关系，直接替换到str里面。</p>
 <p>（这里的callback写的看起来很难受，实际可以直接忽略，实际上就是做了特殊字符转义，我们直接去掉看就可以）</p>
@@ -375,32 +375,32 @@
 <ol>
 <li>传的data和options如下</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906140832485.png" alt="image-20240906140832485" /></p>
+<p><img src="../../../typora-user-images/image-20240906140832485.png" alt="image-20240906140832485" /></p>
 <ol start="2">
 <li>跟到里面的bindParam函数，这里的name是0，val是传入的Sage参数的值</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906141822949.png" alt="image-20240906141822949" /></p>
+<p><img src="../../../typora-user-images/image-20240906141822949.png" alt="image-20240906141822949" /></p>
 <ol start="3">
 <li>第二处解析parseWhere，当为bind时，会直接拼接</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906142149397.png" alt="image-20240906142149397" /></p>
+<p><img src="../../../typora-user-images/image-20240906142149397.png" alt="image-20240906142149397" /></p>
 <ol start="4">
 <li>处理完的SQL如下，两个：就是上面两处处理的结果</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906142435803.png" alt="image-20240906142435803" /></p>
+<p><img src="../../../typora-user-images/image-20240906142435803.png" alt="image-20240906142435803" /></p>
 <ol start="5">
 <li>跟到上面分析的第三处的函数的替换部分，会把其中的:0替换成0。这也就完成了整个sql</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906142740198.png" alt="image-20240906142740198" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906143106502.png" alt="image-20240906143106502" /></p>
+<p><img src="../../../typora-user-images/image-20240906142740198.png" alt="image-20240906142740198" /></p>
+<p><img src="../../../typora-user-images/image-20240906143106502.png" alt="image-20240906143106502" /></p>
 <p>我们发现后面的:123无法转换，导致SQL报错，123是我们传的Sno的第二个参数，解决方法也很简单，我们让Sno的第二个参数以0开始，这样替换的时候也会替换后面的:了。</p>
 <pre class="line-numbers language-none"><code class="language-none">Sno[0]&#x3D;bind&amp;Sno[1]&#x3D;0 and updatexml(1,concat(0x7e,user(),0x7e),1)<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906143402155.png" alt="image-20240906143402155" /></p>
+<p><img src="../../../typora-user-images/image-20240906143402155.png" alt="image-20240906143402155" /></p>
 <h4 id="漏洞修复-3"><a class="markdownIt-Anchor" href="#漏洞修复-3"></a> 漏洞修复</h4>
 <p>在tp 3.2.5版本中</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/top-think/thinkphp/commit/7e47e34af72996497c90c20bcfa3b2e1cedd7fa4">https://github.com/top-think/thinkphp/commit/7e47e34af72996497c90c20bcfa3b2e1cedd7fa4</a></p>
 <p>TP的I方法获取参数添加了过滤特殊字符“bind”</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240905103536028.png" alt="image-20240905103536028" /></p>
+<p><img src="../../../typora-user-images/image-20240905103536028.png" alt="image-20240905103536028" /></p>
 <h3 id="14-order方法order-by注入️24"><a class="markdownIt-Anchor" href="#14-order方法order-by注入️24"></a> 1.4 order方法+order by注入（❤️.2.4）</h3>
 <h4 id="vuldemo-4"><a class="markdownIt-Anchor" href="#vuldemo-4"></a> VulDemo</h4>
 <pre class="line-numbers language-none"><code class="language-none">public function index()
@@ -415,12 +415,12 @@
 <p>TP&lt;3.2.4</p>
 <h4 id="漏洞分析-4"><a class="markdownIt-Anchor" href="#漏洞分析-4"></a> 漏洞分析</h4>
 <p>tp的model类默认没有order方法，在__call的魔术方法</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906144751269.png" alt="image-20240906144751269" /></p>
+<p><img src="../../../typora-user-images/image-20240906144751269.png" alt="image-20240906144751269" /></p>
 <p>parseOrder会直接将字段拼接。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906144850165.png" alt="image-20240906144850165" /></p>
+<p><img src="../../../typora-user-images/image-20240906144850165.png" alt="image-20240906144850165" /></p>
 <h4 id="漏洞修复-4"><a class="markdownIt-Anchor" href="#漏洞修复-4"></a> 漏洞修复</h4>
 <p>3.2.4 进行了修复</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906145044418.png" alt="image-20240906145044418" /></p>
+<p><img src="../../../typora-user-images/image-20240906145044418.png" alt="image-20240906145044418" /></p>
 <h1 id="0x02-tp5"><a class="markdownIt-Anchor" href="#0x02-tp5"></a> 0x02 TP5</h1>
 <h2 id="一-sql注入"><a class="markdownIt-Anchor" href="#一-sql注入"></a> 一、SQL注入</h2>
 <h3 id="1-insert方法注入013-015-10-15"><a class="markdownIt-Anchor" href="#1-insert方法注入013-015-10-15"></a> 1. insert方法注入（0.13-0.15, 1.0-1.5)</h3>
@@ -443,21 +443,21 @@
 <ol>
 <li>简单的生成和执行，跟到生成的部分</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906175242056.png" alt="image-20240906175242056" /></p>
+<p><img src="../../../typora-user-images/image-20240906175242056.png" alt="image-20240906175242056" /></p>
 <ol start="2">
 <li>获取参数然后替换，生成sql</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906175446473.png" alt="image-20240906175446473" /></p>
+<p><img src="../../../typora-user-images/image-20240906175446473.png" alt="image-20240906175446473" /></p>
 <ol start="3">
 <li>解析这部分，当值为inc、exp、dec时候，参数会进行拼接</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906175600482.png" alt="image-20240906175600482" /></p>
+<p><img src="../../../typora-user-images/image-20240906175600482.png" alt="image-20240906175600482" /></p>
 <p>利用的payload：</p>
 <pre class="line-numbers language-none"><code class="language-none">username[0]&#x3D;inc&amp;username[1]&#x3D;updatexml(1,concat(0x7,user(),0x7e),1)&amp;username[2]&#x3D;1 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p><strong>这里拿mochazz师傅的图来总结了（这个图画的是真好）</strong></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906180155561.png" alt="image-20240906180155561" /></p>
+<p><img src="../../../typora-user-images/image-20240906180155561.png" alt="image-20240906180155561" /></p>
 <h4 id="漏洞修复-5"><a class="markdownIt-Anchor" href="#漏洞修复-5"></a> 漏洞修复</h4>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906175933493.png" alt="image-20240906175933493" /></p>
+<p><img src="../../../typora-user-images/image-20240906175933493.png" alt="image-20240906175933493" /></p>
 <h3 id="2-update方法注入16-17"><a class="markdownIt-Anchor" href="#2-update方法注入16-17"></a> 2. update方法注入（1.6-1.7）</h3>
 <h4 id="vuldemo-6"><a class="markdownIt-Anchor" href="#vuldemo-6"></a> VulDemo</h4>
 <ul>
@@ -476,32 +476,32 @@
 <ol>
 <li>跟入到update方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906182253139.png" alt="image-20240906182253139" /></p>
+<p><img src="../../../typora-user-images/image-20240906182253139.png" alt="image-20240906182253139" /></p>
 <ol start="2">
 <li>生成SQL语句和执行部分</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906182504804.png" alt="image-20240906182504804" /></p>
+<p><img src="../../../typora-user-images/image-20240906182504804.png" alt="image-20240906182504804" /></p>
 <ol start="3">
 <li>跟入生成的sql部分，解析data和替换字符</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906182603859.png" alt="image-20240906182603859" /></p>
+<p><img src="../../../typora-user-images/image-20240906182603859.png" alt="image-20240906182603859" /></p>
 <ol start="4">
 <li>解析data部分</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906182642513.png" alt="image-20240906182642513" /></p>
+<p><img src="../../../typora-user-images/image-20240906182642513.png" alt="image-20240906182642513" /></p>
 <ol start="5">
 <li>这里有一个拼接的逻辑</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910165958837.png" alt="image-20240910165958837" /></p>
+<p><img src="../../../typora-user-images/image-20240910165958837.png" alt="image-20240910165958837" /></p>
 <p>从上面跟下来，data是我们传的参数，可控的参数拼接成sql如下，因此最后只要符合sql要求，且第一个参数要为上面swith的point即可。</p>
 <pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">UPDATE</span> <span class="token identifier"><span class="token punctuation">`</span>users<span class="token punctuation">`</span></span>  <span class="token keyword">SET</span> <span class="token identifier"><span class="token punctuation">`</span>username<span class="token punctuation">`</span></span> <span class="token operator">=</span> $a<span class="token punctuation">(</span><span class="token string">'$b($c)'</span><span class="token punctuation">)</span>  <span class="token keyword">WHERE</span>  <span class="token identifier"><span class="token punctuation">`</span>id<span class="token punctuation">`</span></span> <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>接着我们想办法闭合即可。我们令 <strong><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mo>=</mo><mi>u</mi><mi>p</mi><mi>d</mi><mi>a</mi><mi>t</mi><mi>e</mi><mi>x</mi><mi>m</mi><mi>l</mi><mo stretchy="false">(</mo><mn>1</mn><mo separator="true">,</mo><mi>c</mi><mi>o</mi><mi>n</mi><mi>c</mi><mi>a</mi><mi>t</mi><mo stretchy="false">(</mo><mn>0</mn><mi>x</mi><mn>7</mn><mo separator="true">,</mo><mi>u</mi><mi>s</mi><mi>e</mi><mi>r</mi><mo stretchy="false">(</mo><mo stretchy="false">)</mo><mo separator="true">,</mo><mn>0</mn><mi>x</mi><mn>7</mn><mi>e</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mo>∗</mo></msup><mo>∗</mo><mi mathvariant="normal">、</mi><mo>∗</mo><mo>∗</mo></mrow><annotation encoding="application/x-tex">a = updatexml(1,concat(0x7,user(),0x7e),1)^** 、 **</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">a</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">u</span><span class="mord mathdefault">p</span><span class="mord mathdefault">d</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">e</span><span class="mord mathdefault">x</span><span class="mord mathdefault">m</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mopen">(</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mord mathdefault">c</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord">0</span><span class="mord mathdefault">x</span><span class="mord">7</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">u</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mopen">(</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">0</span><span class="mord mathdefault">x</span><span class="mord">7</span><span class="mord mathdefault">e</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.688696em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.46528em;vertical-align:0em;"></span><span class="mord cjk_fallback">、</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.46528em;vertical-align:0em;"></span><span class="mord">∗</span></span></span></span>b = 0</strong> 、 <strong>$c = 1</strong> ，即：</p>
 <pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">UPDATE</span> <span class="token identifier"><span class="token punctuation">`</span>users<span class="token punctuation">`</span></span> <span class="token keyword">SET</span> <span class="token identifier"><span class="token punctuation">`</span>username<span class="token punctuation">`</span></span> <span class="token operator">=</span> updatexml<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span>concat<span class="token punctuation">(</span><span class="token number">0x7</span><span class="token punctuation">,</span><span class="token keyword">user</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">0x7e</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">^</span><span class="token punctuation">(</span><span class="token string">'0(1)'</span><span class="token punctuation">)</span> <span class="token keyword">WHERE</span> <span class="token identifier"><span class="token punctuation">`</span>id<span class="token punctuation">`</span></span> <span class="token operator">=</span> <span class="token number">1</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>继续偷mochazz师傅的图：</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910170538409.png" alt="image-20240910170538409" /></p>
+<p><img src="../../../typora-user-images/image-20240910170538409.png" alt="image-20240910170538409" /></p>
 <h4 id="漏洞修复-6"><a class="markdownIt-Anchor" href="#漏洞修复-6"></a> 漏洞修复</h4>
 <p>直接删除了相关代码</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910170448242.png" alt="image-20240910170448242" /></p>
+<p><img src="../../../typora-user-images/image-20240910170448242.png" alt="image-20240910170448242" /></p>
 <h3 id="3-where方法exp注入全版本"><a class="markdownIt-Anchor" href="#3-where方法exp注入全版本"></a> 3. where方法exp注入（全版本）</h3>
 <h4 id="vuldemo-7"><a class="markdownIt-Anchor" href="#vuldemo-7"></a> VulDemo</h4>
 <ul>
@@ -521,23 +521,23 @@
 <ol>
 <li>where方法，parseWhereExp是解析参数的方法，不太重要。</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910172921594.png" alt="image-20240910172921594" /></p>
+<p><img src="../../../typora-user-images/image-20240910172921594.png" alt="image-20240910172921594" /></p>
 <ol start="2">
 <li>看select方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910173339004.png" alt="image-20240910173339004" /></p>
+<p><img src="../../../typora-user-images/image-20240910173339004.png" alt="image-20240910173339004" /></p>
 <ol start="3">
 <li>跟入到parseWhere方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910173409721.png" alt="image-20240910173409721" /></p>
+<p><img src="../../../typora-user-images/image-20240910173409721.png" alt="image-20240910173409721" /></p>
 <ol start="4">
 <li>跟入到buildWhere方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910173619128.png" alt="image-20240910173619128" /></p>
+<p><img src="../../../typora-user-images/image-20240910173619128.png" alt="image-20240910173619128" /></p>
 <ol start="5">
 <li>会执行到parseWhereItem方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910174002024.png" alt="image-20240910174002024" /></p>
+<p><img src="../../../typora-user-images/image-20240910174002024.png" alt="image-20240910174002024" /></p>
 <h4 id="漏洞修复-7"><a class="markdownIt-Anchor" href="#漏洞修复-7"></a> 漏洞修复</h4>
 <p>未修复</p>
 <h3 id="4where方法not-like注入010"><a class="markdownIt-Anchor" href="#4where方法not-like注入010"></a> 4.where方法not like注入（0.10）</h3>
@@ -557,11 +557,11 @@
 <h4 id="漏洞分析-8"><a class="markdownIt-Anchor" href="#漏洞分析-8"></a> 漏洞分析</h4>
 <p>漏洞分析与上面的exp相同，不过not like是自己传的，不是上面定义好的exp。</p>
 <p>不过多分析了</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910180127484.png" alt="image-20240910180127484" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910180238930.png" alt="image-20240910180238930" /></p>
+<p><img src="../../../typora-user-images/image-20240910180127484.png" alt="image-20240910180127484" /></p>
+<p><img src="../../../typora-user-images/image-20240910180238930.png" alt="image-20240910180238930" /></p>
 <h4 id="漏洞修复-8"><a class="markdownIt-Anchor" href="#漏洞修复-8"></a> 漏洞修复</h4>
 <p>增加了关键字过滤</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910180310523.png" alt="image-20240910180310523" /></p>
+<p><img src="../../../typora-user-images/image-20240910180310523.png" alt="image-20240910180310523" /></p>
 <h3 id="5-order方法注入116-122"><a class="markdownIt-Anchor" href="#5-order方法注入116-122"></a> 5. order方法注入（1.16-1.22）</h3>
 <h4 id="vuldemo-9"><a class="markdownIt-Anchor" href="#vuldemo-9"></a> VulDemo</h4>
 <ul>
@@ -580,11 +580,11 @@
 <h4 id="漏洞分析-9"><a class="markdownIt-Anchor" href="#漏洞分析-9"></a> 漏洞分析</h4>
 <p>这个与上面分析的tp3一样，都是parseOrder方法的问题</p>
 <p>不做详细分析</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910181002235.png" alt="image-20240910181002235" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910181019096.png" alt="image-20240910181019096" /></p>
+<p><img src="../../../typora-user-images/image-20240910181002235.png" alt="image-20240910181002235" /></p>
+<p><img src="../../../typora-user-images/image-20240910181019096.png" alt="image-20240910181019096" /></p>
 <h4 id="漏洞修复-9"><a class="markdownIt-Anchor" href="#漏洞修复-9"></a> 漏洞修复</h4>
 <p>增加判断）和#</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910181040568.png" alt="image-20240910181040568" /></p>
+<p><img src="../../../typora-user-images/image-20240910181040568.png" alt="image-20240910181040568" /></p>
 <h3 id="6-max方法聚合查询注入00-02113-125"><a class="markdownIt-Anchor" href="#6-max方法聚合查询注入00-02113-125"></a> 6. max方法聚合查询注入（0.0-0.21，1.3-1.25）</h3>
 <h4 id="vuldemo-10"><a class="markdownIt-Anchor" href="#vuldemo-10"></a> VulDemo</h4>
 <ul>
@@ -602,11 +602,11 @@
 <h4 id="漏洞分析-10"><a class="markdownIt-Anchor" href="#漏洞分析-10"></a> 漏洞分析</h4>
 <p>max方法实战中用的非常少</p>
 <p>不花时间分析了</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910182130657.png" alt="image-20240910182130657" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910182207168.png" alt="image-20240910182207168" /></p>
+<p><img src="../../../typora-user-images/image-20240910182130657.png" alt="image-20240910182130657" /></p>
+<p><img src="../../../typora-user-images/image-20240910182207168.png" alt="image-20240910182207168" /></p>
 <h4 id="漏洞修复-10"><a class="markdownIt-Anchor" href="#漏洞修复-10"></a> 漏洞修复</h4>
 <p>增加了正则匹配，仅允许字母和. *</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240910182252180.png" alt="image-20240910182252180" /></p>
+<p><img src="../../../typora-user-images/image-20240910182252180.png" alt="image-20240910182252180" /></p>
 <h1 id="0x03-tp6"><a class="markdownIt-Anchor" href="#0x03-tp6"></a> 0x03 TP6</h1>
 <h2 id="1-session任意文件写入00-01"><a class="markdownIt-Anchor" href="#1-session任意文件写入00-01"></a> 1. Session任意文件写入（0.0-0.1）</h2>
 <p><a target="_blank" rel="noopener" href="https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP6/ThinkPHP6.0%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E5%86%99.md">https://github.com/Mochazz/ThinkPHP-Vuln/blob/master/ThinkPHP6/ThinkPHP6.0任意文件写.md</a></p>
@@ -616,43 +616,43 @@
 <ol>
 <li>存在类似assign函数参数可控的代码</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816144806251.png" alt="image-20240816144806251" /></p>
+<p><img src="../../../typora-user-images/image-20240816144806251.png" alt="image-20240816144806251" /></p>
 <pre class="line-numbers language-none"><code class="language-none">assign方法第一个变量可控&#x3D;&gt;变量覆盖&#x3D;&gt;任意文件包含&#x3D;&gt;RCE<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>题外话：本地搭建调试环境的时候，提示找不到模板，自己在<code>Application\Home\View\Index</code>下面新建了模板文件</p>
 <h3 id="漏洞分析-11"><a class="markdownIt-Anchor" href="#漏洞分析-11"></a> 漏洞分析</h3>
 <ol>
 <li>assign只做了赋值操作</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816144850011.png" alt="image-20240816144850011" /></p>
+<p><img src="../../../typora-user-images/image-20240816144850011.png" alt="image-20240816144850011" /></p>
 <ol start="2">
 <li>跟入fetch</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816144934461.png" alt="image-20240816144934461" /></p>
+<p><img src="../../../typora-user-images/image-20240816144934461.png" alt="image-20240816144934461" /></p>
 <ol start="3">
 <li>跟入listen函数</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145025426.png" alt="image-20240816145025426" /></p>
+<p><img src="../../../typora-user-images/image-20240816145025426.png" alt="image-20240816145025426" /></p>
 <ol start="4">
 <li>跟入exec</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145114321.png" alt="image-20240816145114321" /></p>
+<p><img src="../../../typora-user-images/image-20240816145114321.png" alt="image-20240816145114321" /></p>
 <ol start="5">
 <li>跟入赋值类的run方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145137086.png" alt="image-20240816145137086" /></p>
+<p><img src="../../../typora-user-images/image-20240816145137086.png" alt="image-20240816145137086" /></p>
 <ol start="6">
 <li>函数参数是我们传的参数，跟入最后的断点处</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145240625.png" alt="image-20240816145240625" /></p>
+<p><img src="../../../typora-user-images/image-20240816145240625.png" alt="image-20240816145240625" /></p>
 <ol start="7">
 <li>跟入fetch后的load方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145428421.png" alt="image-20240816145428421" /></p>
+<p><img src="../../../typora-user-images/image-20240816145428421.png" alt="image-20240816145428421" /></p>
 <ol start="8">
 <li>很明显的变量覆盖+文件包含，这也是为什么我们需要传入数组变量，key值为_filename</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145751936.png" alt="image-20240816145751936" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240816145818684.png" alt="image-20240816145818684" /></p>
+<p><img src="../../../typora-user-images/image-20240816145751936.png" alt="image-20240816145751936" /></p>
+<p><img src="../../../typora-user-images/image-20240816145818684.png" alt="image-20240816145818684" /></p>
 <p>tp的日志记录：</p>
 <pre class="line-numbers language-none"><code class="language-none">未开启debug：
 \Application\Runtime\Logs\Common\（一般选择&#x2F;?s&#x3D;--&gt;&lt;?&#x3D;phpinfo();?&gt;去触发）
@@ -670,25 +670,25 @@
 <ol>
 <li>跟到$cache的set方法</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906150903581.png" alt="image-20240906150903581" /></p>
+<p><img src="../../../typora-user-images/image-20240906150903581.png" alt="image-20240906150903581" /></p>
 <ol start="2">
 <li>分析文件写入的部分，看两个参数的初始化位置。一个是filename方法获取，一个是序列化后的值</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906151003887.png" alt="image-20240906151003887" /></p>
+<p><img src="../../../typora-user-images/image-20240906151003887.png" alt="image-20240906151003887" /></p>
 <ol start="3">
 <li>filename值，md5计算，拼接配置中的文件夹前缀。</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906151202004.png" alt="image-20240906151202004" /></p>
+<p><img src="../../../typora-user-images/image-20240906151202004.png" alt="image-20240906151202004" /></p>
 <ol start="4">
 <li>写入的文件data中包含//注释符，只要在data添加%0d换行就可以了</li>
 </ol>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906151545064.png" alt="" /></p>
+<p><img src="../../../typora-user-images/image-20240906151545064.png" alt="" /></p>
 <p>文件名为上面分析的，md5（name）的值</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906151748198.png" alt="image-20240906151748198" /></p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906151956563.png" alt="image-20240906151956563" /></p>
+<p><img src="../../../typora-user-images/image-20240906151748198.png" alt="image-20240906151748198" /></p>
+<p><img src="../../../typora-user-images/image-20240906151956563.png" alt="image-20240906151956563" /></p>
 <h3 id="f方法"><a class="markdownIt-Anchor" href="#f方法"></a> F方法</h3>
 <p>F方法很直接，直接写文件，不过多分析。</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240906153209845.png" alt="image-20240906153209845" /></p>
+<p><img src="../../../typora-user-images/image-20240906153209845.png" alt="image-20240906153209845" /></p>
 <h1 id="0x06-tp的日志"><a class="markdownIt-Anchor" href="#0x06-tp的日志"></a> 0x06 TP的日志</h1>
 <h2 id="1-不同的日志含义"><a class="markdownIt-Anchor" href="#1-不同的日志含义"></a> 1. 不同的日志含义</h2>
 <p>默认有不同的log路径</p>
@@ -696,13 +696,13 @@
 <li>Runtime\Logs\Common: 记录系统的整体运行状态</li>
 </ul>
 <p>​	TP3未开启debug情况下记录的信息：</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911102033818.png" alt="image-20240911102033818" /></p>
+<p><img src="../../../typora-user-images/image-20240911102033818.png" alt="image-20240911102033818" /></p>
 <ul>
 <li>Runtime\Logs\Home: 记录模块运行的状态</li>
 </ul>
 <p>​	TP3未开启debug情况下记录的信息：</p>
 <p>​	会记录系统报错信息和SQL语句相关</p>
-<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240911102141866.png" alt="image-20240911102141866" /></p>
+<p><img src="../../../typora-user-images/image-20240911102141866.png" alt="image-20240911102141866" /></p>
 <h2 id="2-日志路径"><a class="markdownIt-Anchor" href="#2-日志路径"></a> 2. 日志路径</h2>
 <h3 id="tp3"><a class="markdownIt-Anchor" href="#tp3"></a> TP3</h3>
 <p><strong>路径：</strong></p>
@@ -764,7 +764,7 @@ runtime&#x2F;log&#x2F;Admin&#x2F;<span aria-hidden="true" class="line-numbers-ro
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-              2024-09-14 16:36:11
+              2024-09-19 10:08:30
             </span>
             
                   <span class="post-tags">

@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="John Doe" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  <meta name="description" content="A hexo theme." />
+  
+  
+  
+  <title>
+    
+      生活案例举例教你搞定难懂的Kerberos认证过程 
+      
+      
+      |
+    
+     Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="/css/math/katex.min.css">
+
+<link rel="stylesheet" href="/css/math/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">CyxSec</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">生活案例举例教你搞定难懂的Kerberos认证过程</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2024-09-27 18:24:01
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/" title="内网渗透">
+                    #内网渗透
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h1 id="序"><a class="markdownIt-Anchor" href="#序"></a> 序</h1>
+<p>Kerberos认证过程之前学过、看过、抓包分析过很多遍，在很长时间不打AD之后又忘的差不多了，重新看起来又要花费不少的时间。我相信不止我一个人有这方面的烦恼，于是该篇结合一些个人思路，拿生活中的案例举例，让大家更好的理解和记忆住Kerberos的完整认证过程。</p>
+<p><strong>注：本文仅分析了大致的交互过程，PAC等未涉及</strong></p>
+<h1 id="0x01-kerberos基本概念"><a class="markdownIt-Anchor" href="#0x01-kerberos基本概念"></a> 0x01 Kerberos基本概念</h1>
+<p>Kerberos是一套安全认证协议，他的出现主要为了解决“证明你是你”的问题，让客户端和服务端建立信任机制。</p>
+<p>如果让互不认识的甲乙互相见面，双方怎么知道对方真的是本人呢？一般的解决办法都是一个证件或者信物，证明他们自己的身份，来保证信任关系。</p>
+<p>Kerberos协议涉及了一个第三方角色KDC来分别确认双方的身份。</p>
+<p>在完整的Kerberos协议模型中主要包含三个角色概念：</p>
+<ul>
+<li>
+<p>客户端：发起服务请求的角色</p>
+</li>
+<li>
+<p>服务端：提供服务访问的角色</p>
+</li>
+<li>
+<p>密钥分发中心（Key Distribution Center 简称<code>KDC</code>），KDC作为活动目录域服务ADDS的一部分运行在每个域控制器上。而KDC又分为两部分：</p>
+<p>1.认证服务（Authentication Service 简称<code>AS</code>）：主要做客户端的认证</p>
+<p>2.票据授予服务（Ticket Granting Service 简称<code>TGS</code>）: 主要做凭证生成</p>
+</li>
+</ul>
+<p>大致过程如下：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Ckerberos2.png" alt="kerberos2" /></p>
+<p>在讲解具体的认证过程前，需要先明确Kerberos着重解决了什么问题：</p>
+<ol>
+<li><strong>密码安全传输问题</strong>：采用加密的票据（ticket）和会话密钥（session key），用户的密码在认证过程中不会在网络上以明文形式传输，防止密码泄露和中间人攻击。</li>
+<li><strong>重放攻击和身份伪造问题</strong>：使用时间戳和一次性的认证器（Authenticator），结合加密的会话密钥，来防止重放攻击。即使攻击者截获了身份凭证或票据，由于这些凭证是一次性的并带有时间限制，攻击者无法重复使用。</li>
+<li><strong>中心化和统一身份验证</strong>：实现了单点登录（SSO，Single Sign-On），用户只需进行一次身份验证，就可以获取用于访问多个服务的票据，而不需要每次访问服务都重新输入密码。这极大简化了用户体验，并通过中心化的认证服务器统一管理身份验证过程。</li>
+<li><strong>重复密码验证的麻烦</strong>：通过引入 TGT（票据授予票据）和服务票据，使得用户只需一次登录认证，随后可以在整个会话中使用票据与多个服务进行安全通信，而不需要重复输入密码。</li>
+</ol>
+<h1 id="0x02-大厦访客管理系统"><a class="markdownIt-Anchor" href="#0x02-大厦访客管理系统"></a> 0x02 大厦访客管理系统</h1>
+<p>作为乙方去客户现场，走了太多次访客流程。</p>
+<p>一个完整的访客流程大概是：</p>
+<ol>
+<li>提前在访客系统提交申请。</li>
+<li>进入前台，前台验证访客信息</li>
+<li>办理门禁卡</li>
+<li>刷门禁卡进入客户办公楼</li>
+</ol>
+<p>对应着上面Kerberos，这套流程有着不少问题：</p>
+<ol>
+<li>门禁卡过期，就要重新验证访客信息，重复验证很麻烦，如果一个项目持续很久，每次你进客户大厦都严格的一项一项验证访客信息就变得及其麻烦。</li>
+<li>门禁卡遗失后，捡到的人依然可以使用。</li>
+</ol>
+<ul>
+<li>第一个问题，我们在验证完访客信息后，可以考虑生成一个访客证，过期时候还可以使用这个访客证重新申请门禁卡。（当然这个访客证也要考虑丢失的问题）</li>
+<li>第二个问题，在每次验证时，可以在传输的凭证里面保存一些信息，同时这部分信息可以在申请凭证时获得，这样就能保证捡到的人无法直接使用凭证做下一步验证。（因为他们不知道这部分信息）</li>
+</ul>
+<h1 id="0x03kerberos认证过程"><a class="markdownIt-Anchor" href="#0x03kerberos认证过程"></a> 0x03Kerberos认证过程</h1>
+<p>在联系到大厦访客系统前，先要重点明确几点，这样在后续的案例对应的时候，举例子能更清晰：</p>
+<ul>
+<li>Kerberos具备着<strong>防窃听</strong>、<strong>防重放</strong>的特性。</li>
+</ul>
+<p>我们可以先设计一个简易的访客系统，想象如果有近源的攻击者在附近。如果近源攻击者<strong>窃听</strong>、**重放（复制）**了获取的数据，能否可以进行伪造身份，如果可以，我们考虑一点一点优化，最后优化了问题，这个访客系统就是Kerberos的实际案例了。</p>
+<p>因为我们上面提出了这个访客系统的两个问题，我们优先解决第一个问题，那就是增加访客证的办理，这样就把前台拆成了两部分。</p>
+<p>访客证办理处（AS）、门禁卡办理处（TGS）。</p>
+<h2 id="1as请求过程办理访客证"><a class="markdownIt-Anchor" href="#1as请求过程办理访客证"></a> 1.AS请求过程（办理访客证）</h2>
+<h3 id="现实办理访客证"><a class="markdownIt-Anchor" href="#现实办理访客证"></a> 现实办理访客证</h3>
+<p>在我们生活中如何办理访客证呢？可能是如下的步骤：</p>
+<ul>
+<li>先表明自己身份</li>
+<li>前台查看是否进行了预约</li>
+<li>验证身份</li>
+<li>办理访客证（TGT）</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181711209.png" alt="image-20240927181711209" /></p>
+<p><strong>这个过程中，如果有近源的攻击者会发生什么？</strong></p>
+<ul>
+<li>攻击者在第3步你输入个人信息和短信验证码时，偷听和偷看。（窃听）</li>
+<li>攻击者在第4步你拿到访客证时候，把访客证偷走或偷偷复制一张一样的，这里假设访客证是最普通的那种NFC的了。（重放）</li>
+</ul>
+<p>防止窃听很简单，我们和前台歪比巴卜（加密通话）就可以了，加密通话总要有规律（密钥），这个规律（密钥）怎么让双方都已知，而且不被窃听呢？</p>
+<ul>
+<li>使用预约记录的信息做规律就可以了，这样就避免了密钥传输的安全性问题，防止被窃听。</li>
+</ul>
+<p>如何防止访客证被偷或者被复制呢？</p>
+<ul>
+<li>利用上面的思路，我们可以要求在使用访客证办理门禁卡的时候，必须和门禁卡办理人员加密通话（说明这张访客证是谁的）才能用。</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181731240.png" alt="image-20240927181731240" /></p>
+<p><strong>加密通话真的就安全吗？</strong></p>
+<p>回到上面的案例：第3步我们和前台”歪比歪比、歪比巴卜“认证信息。攻击者在我们旁边，偷偷把对话录下来，虽然他不知道”歪比歪比、歪比巴卜“具体是什么，但是肯定代表了你的认证信息，这样他就可以用一样的语言，申请到访客证，同时使用加密通话使用访客证。怎么解决这个问题呢？</p>
+<ul>
+<li>我们在每次加密通话时，带上说话的时间就可以了，这样每次加密通话的内容都会不一样，就算被复制，前台也可以通过解密知道这句话的时间完全对不上。</li>
+</ul>
+<p><strong>如何处理和门禁卡办理人员的加密通话呢？</strong></p>
+<p>上面分析了，和访客前台加密通话的规律（密钥）是从预约信息中获取的，但是门禁卡的人员是不知道的。</p>
+<ul>
+<li>我们可以在生成访客证的时候，把这个规律放在访客证里面，同时前台把这个规律通过之前的加密方式，在办理访客证的时候同时告知。这样就完成了和门禁卡办理人员的加密通话问题。</li>
+</ul>
+<h3 id="优化后的办理流程"><a class="markdownIt-Anchor" href="#优化后的办理流程"></a> 优化后的办理流程</h3>
+<p>整理一下现在的办理流程：</p>
+<ol>
+<li>用户向前台表明身份</li>
+<li>前台查询预约信息</li>
+<li>加密通话认证信息</li>
+<li>办理访客证+和后续门禁卡办理人员的加密通话密钥</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181751970.png" alt="image-20240927181751970" /></p>
+<p>再分析一下步骤，我们没必要等着前台回复是否查到预约记录，直接把1，3步骤整合在一起。</p>
+<p>前台通过查询我们的预约信息，发现可以成功解密“加密通话”，那其实也就证明了我们的身份。</p>
+<p><strong>那我们第3步的加密通话应该说什么呢？</strong></p>
+<p>上面我们分析了，一定要防止别人偷听，也就是每次的加密通话都要不一样，我们可以采取“当前时间”的方式。</p>
+<p>我们的密钥也要传递进去吗？</p>
+<p>不需要，因为我们本身加密通话就是使用规律（密钥）加密的，已经证明了我们的身份，没必要使用<strong>密钥去加密密钥</strong>传递过去。</p>
+<p>最终优化好的办理流程如下：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181809716.png" alt="image-20240927181809716" /></p>
+<h3 id="与kerberos协议的对比"><a class="markdownIt-Anchor" href="#与kerberos协议的对比"></a> 与Kerberos协议的对比</h3>
+<p>用户密钥：预约系统的用户信息（<strong>这里的预约系统实际对应了AD的NTDS.dit数据库</strong>）</p>
+<p>TGT：访客证（<strong>因为门禁卡办理处要读取访客证，因此访客证的加密方式一定是门禁卡办理处也要知道的，对应的加密使用了KDC的用户密钥</strong>）</p>
+<p>看回Kerberos的AS请求和响应过程，是不是就变得清晰很多了呢：（直接拿谢公子的图来说了，暂时没找到其他看的清晰的图，自己也懒得画，见谅）</p>
+<ol>
+<li>
+<p>AS-REQ 请求包</p>
+<p>本机向KDC的AS服务（访客证办理处）发送一个认证请求。该请求包中包含如下信息：</p>
+</li>
+</ol>
+<p><strong>· 请求的用户名(cname)。</strong>（访客名称，我是张三）</p>
+<p>**· Authenticator：**这里是用户密钥加密的时间戳，防止重放攻击。（加密通话，歪比歪比）</p>
+<p><strong>· 域名(realm)。</strong></p>
+<p>**· 请求的服务名(sname)：**AS-REQ这个阶段请求的服务都是krbtgt。</p>
+<p><strong>· 加密类型(etype)。</strong></p>
+<p>**· 以及一些其他信息：**如版本号，消息类型，票据有效时间，是否包含PAC，协商选项等。</p>
+<ol start="2">
+<li>
+<p>AS-REP 响应包</p>
+<p>当KDC的AS服务（访客证办理处）到客户端发来的请求后，从活动目录数据库中取出该用户的密钥（从访客记录中寻找张三登录的信息作为规律），然后用该密钥（规律）对请求包中的Authenticator部分（加密通话）进行解密，如果解密成功，并且时间戳在有效的范围内，则证明请求者提供的用户密钥正确。</p>
+<p>KDC的AS认证服务在成功认证客户端的身份之后，发送AS-REP响应包给客户端。AS-REP响应包中主要包括如下信息：</p>
+<p>**· TGT认购权证：**包含明文的版本号，域名，请求的服务名，以及加密部分enc-part。加密部分用krbtgt密钥加密。加密部分包含Logon Session Key、用户名、域名、认证时间、认证到期时间和authorization-data。authorization-data中包含最重要的PAC特权属性证书，包含用户的RID，用户所在组的RID等。（TGT作为访客证，因为访客证在后面的门禁卡办理处需要读取，因此使用对应密码加密）</p>
+<p>**· enc_Logon Session Key：**使用用户密钥加密Logon Session Key后的值，其作用是用于确保客户端和KDC下阶段之间通信安全。也就是AS-REP中最外层的enc-part。（使用和张三交流的规律，加密新的规律，用于和门禁卡办理处的加密通话）</p>
+<p><strong>· 请求的用户名(cname)。</strong></p>
+<p><strong>· 域名(crealm)。</strong></p>
+<p>**· 以及一些其他信息：**如版本号，消息类型等。</p>
+</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927182028856.png" alt="image-20240927182028856" /></p>
+<h2 id="2tgs请求过程办理门禁卡"><a class="markdownIt-Anchor" href="#2tgs请求过程办理门禁卡"></a> 2.TGS请求过程（办理门禁卡）</h2>
+<p>和上面的方式类似，只不过我们加密通话的规律（密钥），从个人信息变成了从访客证办理处（AS）获取的。</p>
+<h3 id="优化后的办理流程-2"><a class="markdownIt-Anchor" href="#优化后的办理流程-2"></a> 优化后的办理流程</h3>
+<ul>
+<li>
+<p>把访客证（TGT）递交给门禁卡办理处（TGS），因为访客证（TGT）不能单独使用，需要玛卡巴卡阿卡哇卡（全新的加密通话）。</p>
+</li>
+<li>
+<p>因为加密通话的规律（密钥）存储在访客证（TGT）中，因此门禁卡办理处（TGS）可以获取，也就可以听懂加密通话。（<strong>加密通话的内容，我们上面也分析过，只需要说“当前时间”即可。</strong>）</p>
+</li>
+<li>
+<p>门禁卡办理处（TGS）使用访客证（TGT）中的信息解密我们发出玛卡巴卡阿卡哇卡（加密通话），发现可以成功解密，验证了身份，同时发现**”当前时间“**也对得上，可以验证通过。</p>
+</li>
+<li>
+<p>正常发放门禁卡（ST）+与公司门禁保安的加密通话。加密通话的规律也保存在门禁卡（ST）中，保证门禁卡（ST）不会被捡到的人直接使用。</p>
+</li>
+</ul>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181830512.png" alt="image-20240927181830512" /></p>
+<h3 id="与kerberos协议的对比-2"><a class="markdownIt-Anchor" href="#与kerberos协议的对比-2"></a> 与Kerberos协议的对比</h3>
+<ol>
+<li>TGS-REQ 请求</li>
+</ol>
+<p>客户端拿着上一步获得的TGT（访客证）认购权证发起请求，向TGS（门禁卡办理处）购买针对指定服务的ST（门禁卡）服务票据，该请求主要包含如下信息：</p>
+<p><strong>· TGT认购权证。</strong>（访客证）</p>
+<p>**· Authenticator：**这里使用Logon Session Key加密的时间戳，防止重放攻击。（加密通话，玛卡巴卡）</p>
+<p><strong>· 请求的服务名(sname)。</strong>（客户名）</p>
+<p><strong>· 域名(realm)。</strong></p>
+<p><strong>· 加密类型(etype)。</strong></p>
+<p>**· 以及一些其他信息：**如版本号，消息类型，协商选项，票据到期时间等</p>
+<ol start="2">
+<li>TGS-REP 响应</li>
+</ol>
+<p>TGS服务（门禁卡办理处）接收到请求之后。首先使用krbtgt密钥解密TGT认购权证中加密部分得到Logon Session key等信息（生成访客证的时候，把规律加密写入了里面，所以门禁卡办理处可以直接读取规律），如果能解密成功则说明该TGT认购权证是KDC颁发的（说明访客证有效）。然后使用Logon Session Key解密Authenticator得到时间戳等信息，如果能够解密成功，并且票据时间在范围内，则验证了会话的安全性。（使用规律成功解密发起的加密通话玛卡巴卡，且验证了时间）在完成上述的检测后，KDC的TGS服务完成了对客户端的认证，TGS服务发送响应包给客户端。响应包中主要包括如下信息：</p>
+<p>**· ST服务票据：**包含明文的版本号，域名，请求的服务名，以及加密部分enc-part，加密部分用服务密钥加密。加密部分包含用户名、域名、认证时间、认证到期时间、Service Session key和authorization-data。authorization-data中包含最重要的PAC特权属性证书，包含用户的RID，用户所在的组的RDI 等。（门禁卡）</p>
+<p>**· enc_Service Session key：**使用Logon Session key加密的Service Session key，其作用是用于确保客户端和KDC下阶段之间通信安全。（使用和访客证的规律，加密新的规律，用于和刷卡处保安的加密通话）</p>
+<p><strong>· 请求的用户名(cname)</strong></p>
+<p><strong>· 域名(crealm)</strong></p>
+<p>**· 以及一些其他信息：**如版本号、消息类型等。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181908412.png" alt="image-20240927181908412" /></p>
+<h2 id="3server请求过程门禁刷卡"><a class="markdownIt-Anchor" href="#3server请求过程门禁刷卡"></a> 3.Server请求过程（门禁刷卡）</h2>
+<h3 id="与kerberos协议的对比-3"><a class="markdownIt-Anchor" href="#与kerberos协议的对比-3"></a> 与Kerberos协议的对比</h3>
+<ol>
+<li>AP-REQ 请求</li>
+</ol>
+<p>客户端接收到KDC的TGS回复后，通过缓存的Logon Session Key解密enc_Service Session key得到Service Session Key，（通过从访客证办理处获取的规律，拿到新的规律）同时它也拿到了ST(门禁卡)服务票据。Serivce Session Key 和 ST服务票据会被客户端缓存。</p>
+<p>客户端访问指定服务时，将发起AP-REQ请求，该请求主要包含如下的内容：</p>
+<p><strong>· ST服务票据</strong>（门禁卡）</p>
+<p>**· Authenticator：**这里指Serivce Session Key加密的时间戳。（加密通话，妈咪妈咪哄）</p>
+<p>**· 以及一些其他信息：**如版本号、消息类型，协商选项等</p>
+<ol start="2">
+<li>服务端解码ST，使用其中的sessionKey解码时间戳，发现时间戳没有问题，成功通过验证。</li>
+</ol>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20240927181942847.png" alt="image-20240927181942847" /></p>
+<h1 id="0x04-票据攻击"><a class="markdownIt-Anchor" href="#0x04-票据攻击"></a> 0x04 票据攻击</h1>
+<p>通过我们上面的模型分析，对于黄金票据和白银票据就很好理解了：</p>
+<h2 id="黄金票据"><a class="markdownIt-Anchor" href="#黄金票据"></a> 黄金票据</h2>
+<ul>
+<li>黄金票据就是在<strong>访客证办理处</strong>出现了内鬼，导致可以伪造出一个完整的访客证，同时也能解决加密通话的问题，导致可以随便申请门禁卡，想去哪就去哪。（访客证的加密是使用了门禁卡办理处的密码，因为门禁卡办理处要解密识别）</li>
+</ul>
+<p>具体伪造需要什么呢，其实就是TGT（访客证）包含的东西：</p>
+<p>1、域名称(shell net config workstation )<br />
+2、域的SID值(shell whoami /user)<br />
+3、域的KRBTGT账号的HASH （门禁卡办理处的密码）<br />
+4、任意用户名</p>
+<h2 id="白银票据"><a class="markdownIt-Anchor" href="#白银票据"></a> 白银票据</h2>
+<ul>
+<li>白银票据就是在<strong>门禁卡办理处</strong>出现了内鬼，导致伪造出一个完整的门禁卡，同时也能解决加密通话问题，伪造的门禁卡可以刷卡指定公司的门禁。（门禁卡的加密是使用了指定公司的密码，因为公司处要解密识别）</li>
+</ul>
+<p>伪造ST（门禁卡）需要：</p>
+<p>1.域名称(shell net config workstation )<br />
+2.域的SID值(shell whoami /user)<br />
+3.目标服务器名<br />
+4.可利用的服务<br />
+5.服务账号的NTML HASH（指定公司的密码）<br />
+6.需要伪造的用户名</p>
+<p><strong>为什么伪造的ST（门禁卡）叫做白银票据呢？因为我们发现，伪造的ST（门禁卡）的用途有限，只能对指定服务（公司）使用，而伪造TGT（访客证）却可以申请到任意服务（公司）的门禁卡。白银比黄金差一些</strong></p>
+<h1 id="0x05-认证流程攻击"><a class="markdownIt-Anchor" href="#0x05-认证流程攻击"></a> 0x05 认证流程攻击</h1>
+<h2 id="as_req请求办理访客证"><a class="markdownIt-Anchor" href="#as_req请求办理访客证"></a> AS_REQ（请求办理访客证）</h2>
+<ol>
+<li><strong>PTH</strong></li>
+</ol>
+<p>这个就不举实例了，这个很好理解，就是在整个验证的时候使用的不是明文，而是Hash，或者说是Hash和处理过的Hash（处理过的Hash就是上面说的加密通话的规律），获取用户的hash就可以进行认证利用，而不是完整明文。</p>
+<ol start="2">
+<li><strong>域内用户枚举</strong></li>
+</ol>
+<p>回到实例，我们在办理访客证时会说明身份，但是如果未在预约信息中，前台肯定会给出提醒，说我们没有做预约（找不到规律去解密加密通话），我们就可以利用这个特性来测试谁预约过了。（域内是否存在某用户）</p>
+<ol start="3">
+<li><strong>密码喷洒攻击</strong></li>
+</ol>
+<p>我们如果偶然间获取了某位用户的加密通话规律，但是不知道具体是谁的。显然可以去前台说出大量用户名进行批量尝试。</p>
+<h2 id="as_rep访客证攻击"><a class="markdownIt-Anchor" href="#as_rep访客证攻击"></a> AS_REP（访客证攻击）</h2>
+<ol>
+<li><strong>黄金票据</strong></li>
+</ol>
+<p>上面分析过</p>
+<ol start="2">
+<li><strong>AS-REP Roasting攻击</strong></li>
+</ol>
+<p>域用户有一个&quot;Do not require Kerberos preauthentication”不需要预认证选项（默认不开启）</p>
+<p>在实例中可以理解为，不验证用户发出的加密通话。这样就可以直接拿到TGT（访客证）和下次加密通话的规律（但是这个规律也是拿用户Hash做加密的）</p>
+<p>我们可以对这个&quot;下次加密通话的规律&quot;使用字典尝试破解，因为是对称加密，所以尝试破解，这样可以尝试拿到用户的明文密码。</p>
+<h2 id="tgs_rep门禁卡攻击"><a class="markdownIt-Anchor" href="#tgs_rep门禁卡攻击"></a> TGS_REP（门禁卡攻击）</h2>
+<ol>
+<li><strong>白银票据</strong></li>
+</ol>
+<p>上面分析过</p>
+<ol start="2">
+<li><strong>Kerberosasting 攻击</strong></li>
+</ol>
+<p>我们知道ST（门禁卡）是使用对应服务（公司）的密码加密的，因为是对称加密，所以可以使用字典爆破。尝试破解获取服务Hash（公司密码）。</p>
+<p>这个攻击能进行的原因也有：用户使用TGT可以申请任意服务的ST，因为这个步骤没有对用户是否可以访问该服务做验证。</p>
+<p>这样我们拿到某个域用户的凭证后，即可考虑向所有服务请求ST，然后进行破解。</p>
+<p><strong>上面我们能爆破用户和服务的密码，为什么不能爆破KDC的密码呢？</strong></p>
+<p>因为krbtgt的密码是随机生成的，爆破不出来。</p>
+<h1 id="参考链接"><a class="markdownIt-Anchor" href="#参考链接"></a> 参考链接</h1>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/2227940#:~:text=%E7%A4%BE%E5%8C%BA%E9%A6%96%E9%A1%B5%20%3E%20%E4%B8%93">https://cloud.tencent.com/developer/article/2227940#:~:text=社区首页 &gt; 专</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/15367?time__1311=GqjxnD2DyDRDcDRx05DKg%2BEb2xqQu00pD#toc-6">https://xz.aliyun.com/t/15367?time__1311=GqjxnD2DyDRDcDRx05DKg%2BEb2xqQu00pD#toc-6</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2024/09/Jdbc%E6%94%BB%E9%98%B2%E6%8C%87%E5%8C%97/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2024-09-27 18:24:01
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/" title="内网渗透">
+                        #内网渗透
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BA%8F"><span class="toc-text"> 序</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x01-kerberos%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-text"> 0x01 Kerberos基本概念</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x02-%E5%A4%A7%E5%8E%A6%E8%AE%BF%E5%AE%A2%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F"><span class="toc-text"> 0x02 大厦访客管理系统</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x03kerberos%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B"><span class="toc-text"> 0x03Kerberos认证过程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1as%E8%AF%B7%E6%B1%82%E8%BF%87%E7%A8%8B%E5%8A%9E%E7%90%86%E8%AE%BF%E5%AE%A2%E8%AF%81"><span class="toc-text"> 1.AS请求过程（办理访客证）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%B0%E5%AE%9E%E5%8A%9E%E7%90%86%E8%AE%BF%E5%AE%A2%E8%AF%81"><span class="toc-text"> 现实办理访客证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E%E7%9A%84%E5%8A%9E%E7%90%86%E6%B5%81%E7%A8%8B"><span class="toc-text"> 优化后的办理流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8Ekerberos%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="toc-text"> 与Kerberos协议的对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2tgs%E8%AF%B7%E6%B1%82%E8%BF%87%E7%A8%8B%E5%8A%9E%E7%90%86%E9%97%A8%E7%A6%81%E5%8D%A1"><span class="toc-text"> 2.TGS请求过程（办理门禁卡）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E%E7%9A%84%E5%8A%9E%E7%90%86%E6%B5%81%E7%A8%8B-2"><span class="toc-text"> 优化后的办理流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8Ekerberos%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AF%B9%E6%AF%94-2"><span class="toc-text"> 与Kerberos协议的对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3server%E8%AF%B7%E6%B1%82%E8%BF%87%E7%A8%8B%E9%97%A8%E7%A6%81%E5%88%B7%E5%8D%A1"><span class="toc-text"> 3.Server请求过程（门禁刷卡）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8Ekerberos%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AF%B9%E6%AF%94-3"><span class="toc-text"> 与Kerberos协议的对比</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x04-%E7%A5%A8%E6%8D%AE%E6%94%BB%E5%87%BB"><span class="toc-text"> 0x04 票据攻击</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE"><span class="toc-text"> 黄金票据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%99%BD%E9%93%B6%E7%A5%A8%E6%8D%AE"><span class="toc-text"> 白银票据</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x05-%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B%E6%94%BB%E5%87%BB"><span class="toc-text"> 0x05 认证流程攻击</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#as_req%E8%AF%B7%E6%B1%82%E5%8A%9E%E7%90%86%E8%AE%BF%E5%AE%A2%E8%AF%81"><span class="toc-text"> AS_REQ（请求办理访客证）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#as_rep%E8%AE%BF%E5%AE%A2%E8%AF%81%E6%94%BB%E5%87%BB"><span class="toc-text"> AS_REP（访客证攻击）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tgs_rep%E9%97%A8%E7%A6%81%E5%8D%A1%E6%94%BB%E5%87%BB"><span class="toc-text"> TGS_REP（门禁卡攻击）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text"> 参考链接</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/cyxsec">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a href="https://cyxsec.github.io/">Copyright © 2024 CysSec</a>
+        
+    </div>
+  
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E7%94%9F%E6%B4%BB%E6%A1%88%E4%BE%8B%E4%B8%BE%E4%BE%8B%E6%95%99%E4%BD%A0%E6%90%9E%E5%AE%9A%E9%9A%BE%E6%87%82%E7%9A%84Kerberos%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2024%2F09%2F%25E7%2594%259F%25E6%25B4%25BB%25E6%25A1%2588%25E4%25BE%258B%25E4%25B8%25BE%25E4%25BE%258B%25E6%2595%2599%25E4%25BD%25A0%25E6%2590%259E%25E5%25AE%259A%25E9%259A%25BE%25E6%2587%2582%25E7%259A%2584Kerberos%25E8%25AE%25A4%25E8%25AF%2581%25E8%25BF%2587%25E7%25A8%258B%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2024/09/%E7%94%9F%E6%B4%BB%E6%A1%88%E4%BE%8B%E4%B8%BE%E4%BE%8B%E6%95%99%E4%BD%A0%E6%90%9E%E5%AE%9A%E9%9A%BE%E6%87%82%E7%9A%84Kerberos%E8%AE%A4%E8%AF%81%E8%BF%87%E7%A8%8B/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

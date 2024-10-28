@@ -156,7 +156,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-          2024-07-22 16:47:26
+          2024-10-16 13:37:18
         </span>
         
               <span class="post-tags">
@@ -175,7 +175,7 @@
         <p>Linux渗透的时候要理解和接受一个概念：Linux一切皆文件</p>
 <p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong></p>
 <p>Linux不同发行版有他们自己的特性，这些特性在渗透和后渗透中都可以用到</p>
-<h2 id="0x01查看系统ip信息"><a class="markdownIt-Anchor" href="#0x01查看系统ip信息"></a> 0x01查看系统ip信息</h2>
+<h2 id="0x01-查看系统ip信息"><a class="markdownIt-Anchor" href="#0x01-查看系统ip信息"></a> 0x01 查看系统ip信息</h2>
 <ul>
 <li>阉割 ip a、ifconfig</li>
 </ul>
@@ -191,9 +191,40 @@
 <li>hostname -I</li>
 <li>端口连接信息</li>
 </ul>
-<h2 id="0x02查看端口连接信息"><a class="markdownIt-Anchor" href="#0x02查看端口连接信息"></a> 0x02查看端口连接信息</h2>
+<h2 id="0x02-查看端口连接信息"><a class="markdownIt-Anchor" href="#0x02-查看端口连接信息"></a> 0x02 查看端口连接信息</h2>
 <p>/proc/net 下面的tcp和udp文件会存储网络端口连接情况</p>
 <p><img src="../../../typora-user-images/image-20240527102511919.png" alt="image-20240527102511919" /></p>
+<h2 id="0x03-判断发行版"><a class="markdownIt-Anchor" href="#0x03-判断发行版"></a> 0x03 判断发行版</h2>
+<h3 id="读取相关配置文件"><a class="markdownIt-Anchor" href="#读取相关配置文件"></a> 读取相关配置文件</h3>
+<p>/proc/version</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180201337.png" alt="image-20241015180201337" /></p>
+<p>/etc/issue（例子中的centos没有读取到信息）</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180327229.png" alt="image-20241015180327229" /></p>
+<p>/etc/os-release</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180457090.png" alt="image-20241015180457090" /></p>
+<h3 id="利用不同发行版特性"><a class="markdownIt-Anchor" href="#利用不同发行版特性"></a> 利用不同发行版特性</h3>
+<p>包管理器区分（列目录查看）：debain和ubuntu用apt，centos用yum</p>
+<p>/etc/debian_version：这个文件在所有基于 Debian 的系统中存在，并记录当前 Debian 的版本号。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180748718.png" alt="image-20241015180748718" /></p>
+<p>/etc/lsb-release：Ubuntu 系列中，通常还有 <code>/etc/lsb-release</code> 文件，包含关于系统的详细信息：</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180830851.png" alt="image-20241015180830851" /></p>
+<h2 id="0x04-获取内核版本"><a class="markdownIt-Anchor" href="#0x04-获取内核版本"></a> 0x04 获取内核版本</h2>
+<h3 id="命令"><a class="markdownIt-Anchor" href="#命令"></a> 命令</h3>
+<p>uname -a</p>
+<p>hostnamectl</p>
+<h3 id="本地记录信息的文件"><a class="markdownIt-Anchor" href="#本地记录信息的文件"></a> 本地记录信息的文件</h3>
+<p><code>/proc/version</code> 文件包含关于内核版本的详细信息，包括编译器版本和编译时间。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180201337.png" alt="image-20241015180201337" /></p>
+<h3 id="其他记录信息的文件"><a class="markdownIt-Anchor" href="#其他记录信息的文件"></a> 其他记录信息的文件</h3>
+<p>主要包括内核相关目录、启动日志等。这些目录下面的文件包含着内核版本号信息。</p>
+<p><code>/proc/version</code>：详细的内核和编译信息。</p>
+<p><code>/boot/vmlinuz-*</code>：内核镜像文件，文件名包含版本号。</p>
+<p><code>/usr/src/linux-headers-*</code>：内核头文件，目录名包含版本号。</p>
+<p><code>/lib/modules/*</code>：内核模块目录，子目录名为内核版本号。</p>
+<p><code>/proc/sys/kernel/osrelease</code>：直接包含内核版本号。</p>
+<p><code>/var/log/dmesg</code>：内核启动日志，包含内核版本。</p>
+<p><code>/boot/config-*</code>：内核编译配置文件，文件名包含版本号。</p>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241016102347912.png" alt="image-20241016102347912" /></p>
 
       </div>
       
@@ -209,7 +240,7 @@
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-              2024-07-22 16:47:26
+              2024-10-16 13:37:18
             </span>
             
                   <span class="post-tags">
@@ -243,7 +274,7 @@
     <div class="title">Contents</div>
     <div class="catalog-content">
       
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9Fip%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x01查看系统ip信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E8%BF%9E%E6%8E%A5%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x02查看端口连接信息</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9Fip%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x01 查看系统ip信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E8%BF%9E%E6%8E%A5%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x02 查看端口连接信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E5%88%A4%E6%96%AD%E5%8F%91%E8%A1%8C%E7%89%88"><span class="toc-text"> 0x03 判断发行版</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text"> 读取相关配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E4%B8%8D%E5%90%8C%E5%8F%91%E8%A1%8C%E7%89%88%E7%89%B9%E6%80%A7"><span class="toc-text"> 利用不同发行版特性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E8%8E%B7%E5%8F%96%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%AC"><span class="toc-text"> 0x04 获取内核版本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4"><span class="toc-text"> 命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AC%E5%9C%B0%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 本地记录信息的文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 其他记录信息的文件</span></a></li></ol></li></ol>
       
     </div>
   </div>

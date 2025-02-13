@@ -156,7 +156,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-          2024-10-16 13:37:18
+          2024-10-28 16:48:30
         </span>
         
               <span class="post-tags">
@@ -173,7 +173,7 @@
       </div>
       <div class="markdown-body">
         <p>Linux渗透的时候要理解和接受一个概念：Linux一切皆文件</p>
-<p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong></p>
+<p><strong>简单记录一下渗透中利用的Linux特性、后渗透的极限场景处理</strong>（尽量OPSec）</p>
 <p>Linux不同发行版有他们自己的特性，这些特性在渗透和后渗透中都可以用到</p>
 <h2 id="0x01-查看系统ip信息"><a class="markdownIt-Anchor" href="#0x01-查看系统ip信息"></a> 0x01 查看系统ip信息</h2>
 <ul>
@@ -194,7 +194,36 @@
 <h2 id="0x02-查看端口连接信息"><a class="markdownIt-Anchor" href="#0x02-查看端口连接信息"></a> 0x02 查看端口连接信息</h2>
 <p>/proc/net 下面的tcp和udp文件会存储网络端口连接情况</p>
 <p><img src="../../../typora-user-images/image-20240527102511919.png" alt="image-20240527102511919" /></p>
-<h2 id="0x03-判断发行版"><a class="markdownIt-Anchor" href="#0x03-判断发行版"></a> 0x03 判断发行版</h2>
+<p>按照格式转换一下即可</p>
+<h2 id="0x03-查看端口对应pid"><a class="markdownIt-Anchor" href="#0x03-查看端口对应pid"></a> 0x03 查看端口对应PID</h2>
+<p>通过上面获取到连接信息，连接信息中有一个Inode字段。</p>
+<ol>
+<li>
+<p>每个进程在 <code>/proc/&lt;pid&gt;/fd/</code> 目录下都会列出文件描述符，它们链接到实际的 inode。我们可以遍历 <code>/proc/&lt;pid&gt;/fd/</code> 下的符号链接文件，查找链接 inode 的进程：</p>
+<p><strong>为实战中的Opsec，find可以改成先下载proc所以文件， 然后本地find</strong></p>
+</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">find</span> /proc/*/fd <span class="token parameter variable">-lname</span> <span class="token string">"socket:\[inode\]"</span> <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241028163348810.png" alt="image-20241028163348810" /></p>
+<ol start="2">
+<li>通过inode信息，lsof命令寻找对应pid（非Opsec）</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">lsof</span> <span class="token parameter variable">-i</span> <span class="token operator">|</span> <span class="token function">grep</span> <span class="token operator">&lt;</span>inode_number<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241028163444964.png" alt="image-20241028163444964" /></p>
+<h2 id="0x04-查看端口对应进程"><a class="markdownIt-Anchor" href="#0x04-查看端口对应进程"></a> 0x04  查看端口对应进程</h2>
+<p>其实有很多种方法，我这里举例一个比较OPSec的方法</p>
+<p>通过上面的方法拿到端口的pid</p>
+<p>每个进程都有一个对应的 <code>/proc/&lt;PID&gt;</code> 目录，其中包含该进程的详细信息。你可以查看以下文件来获取信息：</p>
+<ul>
+<li><code>/proc/&lt;PID&gt;/status</code>：提供进程的详细状态信息。</li>
+<li><code>/proc/&lt;PID&gt;/cmdline</code>：显示启动该进程时的命令行参数。</li>
+<li><code>/proc/&lt;PID&gt;/cwd</code>：显示当前工作目录。</li>
+</ul>
+<p>例如，查看 PID 为 <code>1234</code> 的进程信息：</p>
+<pre class="line-numbers language-none"><code class="language-none">cat &#x2F;proc&#x2F;1234&#x2F;status
+cat &#x2F;proc&#x2F;1234&#x2F;cmdline<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241028164256828.png" alt="image-20241028164256828" /></p>
+<h2 id="0x05-判断发行版"><a class="markdownIt-Anchor" href="#0x05-判断发行版"></a> 0x05 判断发行版</h2>
 <h3 id="读取相关配置文件"><a class="markdownIt-Anchor" href="#读取相关配置文件"></a> 读取相关配置文件</h3>
 <p>/proc/version</p>
 <p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180201337.png" alt="image-20241015180201337" /></p>
@@ -208,8 +237,8 @@
 <p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180748718.png" alt="image-20241015180748718" /></p>
 <p>/etc/lsb-release：Ubuntu 系列中，通常还有 <code>/etc/lsb-release</code> 文件，包含关于系统的详细信息：</p>
 <p><img src="C:%5CUsers%5C14198%5Cblog%5Cpublic%5Ctypora-user-images%5Cimage-20241015180830851.png" alt="image-20241015180830851" /></p>
-<h2 id="0x04-获取内核版本"><a class="markdownIt-Anchor" href="#0x04-获取内核版本"></a> 0x04 获取内核版本</h2>
-<h3 id="命令"><a class="markdownIt-Anchor" href="#命令"></a> 命令</h3>
+<h2 id="0x06-获取内核版本"><a class="markdownIt-Anchor" href="#0x06-获取内核版本"></a> 0x06 获取内核版本</h2>
+<h3 id="命令非opsec"><a class="markdownIt-Anchor" href="#命令非opsec"></a> 命令（非Opsec）</h3>
 <p>uname -a</p>
 <p>hostnamectl</p>
 <h3 id="本地记录信息的文件"><a class="markdownIt-Anchor" href="#本地记录信息的文件"></a> 本地记录信息的文件</h3>
@@ -240,7 +269,7 @@
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
-              2024-10-16 13:37:18
+              2024-10-28 16:48:30
             </span>
             
                   <span class="post-tags">
@@ -274,7 +303,7 @@
     <div class="title">Contents</div>
     <div class="catalog-content">
       
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9Fip%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x01 查看系统ip信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E8%BF%9E%E6%8E%A5%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x02 查看端口连接信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E5%88%A4%E6%96%AD%E5%8F%91%E8%A1%8C%E7%89%88"><span class="toc-text"> 0x03 判断发行版</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text"> 读取相关配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E4%B8%8D%E5%90%8C%E5%8F%91%E8%A1%8C%E7%89%88%E7%89%B9%E6%80%A7"><span class="toc-text"> 利用不同发行版特性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E8%8E%B7%E5%8F%96%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%AC"><span class="toc-text"> 0x04 获取内核版本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4"><span class="toc-text"> 命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AC%E5%9C%B0%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 本地记录信息的文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 其他记录信息的文件</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9Fip%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x01 查看系统ip信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E8%BF%9E%E6%8E%A5%E4%BF%A1%E6%81%AF"><span class="toc-text"> 0x02 查看端口连接信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E5%AF%B9%E5%BA%94pid"><span class="toc-text"> 0x03 查看端口对应PID</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E5%AF%B9%E5%BA%94%E8%BF%9B%E7%A8%8B"><span class="toc-text"> 0x04  查看端口对应进程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E5%88%A4%E6%96%AD%E5%8F%91%E8%A1%8C%E7%89%88"><span class="toc-text"> 0x05 判断发行版</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text"> 读取相关配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E4%B8%8D%E5%90%8C%E5%8F%91%E8%A1%8C%E7%89%88%E7%89%B9%E6%80%A7"><span class="toc-text"> 利用不同发行版特性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x06-%E8%8E%B7%E5%8F%96%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%AC"><span class="toc-text"> 0x06 获取内核版本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4%E9%9D%9Eopsec"><span class="toc-text"> 命令（非Opsec）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AC%E5%9C%B0%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 本地记录信息的文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E8%AE%B0%E5%BD%95%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-text"> 其他记录信息的文件</span></a></li></ol></li></ol>
       
     </div>
   </div>
@@ -319,7 +348,7 @@
     
     <div class="footer-more">
       
-        <a href="https://cyxsec.github.io/">Copyright © 2024 CysSec</a>
+        <a href="https://cyxsec.github.io/">Copyright © 2025 CysSec</a>
         
     </div>
   
@@ -555,12 +584,12 @@
       </a>
       <div class="share-content hidden">
         
-          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86 + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2023%2F04%2FLinux%25E5%2590%258E%25E6%25B8%2597%25E9%2580%258F%25E7%25A0%2594%25E7%25A9%25B6--Linux%25E7%2589%25B9%25E6%2580%25A7%25E5%2588%25A9%25E7%2594%25A8%25E5%2592%258C%25E6%259E%2581%25E9%2599%2590%25E5%259C%25BA%25E6%2599%25AF%25E5%25A4%2584%25E7%2590%2586%2F + '" target="_blank" title="Twitter">
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86 + '&url=' + https%3A%2F%2Fcyxsec.github.io%2F2023%2F04%2FLinux%25E5%2590%258E%25E6%25B8%2597%25E9%2580%258F-%25E5%2591%25BD%25E4%25BB%25A4Opsec%2F + '" target="_blank" title="Twitter">
             <i class="iconfont icon-twitter"></i>
           </a>
         
         
-          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F%E7%A0%94%E7%A9%B6--Linux%E7%89%B9%E6%80%A7%E5%88%A9%E7%94%A8%E5%92%8C%E6%9E%81%E9%99%90%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86/" target="_blank" title="Facebook">
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://cyxsec.github.io/2023/04/Linux%E5%90%8E%E6%B8%97%E9%80%8F-%E5%91%BD%E4%BB%A4Opsec/" target="_blank" title="Facebook">
             <i class="iconfont icon-facebooksquare"></i>
           </a>
         
